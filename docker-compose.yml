@@ -1,0 +1,78 @@
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: tasks_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      FLASK_ENV: production
+    depends_on:
+      - db
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    environment:
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+    entrypoint: >
+      sh -c "
+      if lsof -i:8080; then
+        echo 'Stopping process on port 8080';
+        kill -9 $(lsof -t -i:8080);
+      fi;
+      if lsof -i:50000; then
+        echo 'Stopping process on port 50000';
+        kill -9 $(lsof -t -i:50000);
+      fi;
+      /usr/bin/tini -- /usr/local/bin/jenkins.sh
+      "
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    entrypoint: >
+      sh -c "
+      if lsof -i:9090; then
+        echo 'Stopping process on port 9090';
+        kill -9 $(lsof -t -i:9090);
+      fi;
+      /bin/prometheus --config.file=/etc/prometheus/prometheus.yml
+      "
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    entrypoint: >
+      sh -c "
+      if lsof -i:3000; then
+        echo 'Stopping process on port 3000';
+        kill -9 $(lsof -t -i:3000);
+      fi;
+      /run.sh
+      "
+
+volumes:
+  pgdata:
+  jenkins_home:
+  grafana_data:
