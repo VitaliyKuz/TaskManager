@@ -1,36 +1,27 @@
 pipeline {
     agent any
-    environment {
-        DOCKER_IMAGE = 'task_manager_web'
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Clone Repository') {
             steps {
-                echo 'Cloning repository...'
-                checkout scm
+                git branch: 'main', url: 'https://github.com/VitaliyKuz/TaskManager.git'
             }
         }
-
-        stage('Build') {
+        stage('Build and Deploy') {
             steps {
-                echo 'Building Docker images...'
-                sh 'docker compose build'
+                sh 'docker compose --env-file .env up --build'
             }
         }
-
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-                sh 'docker compose run web pytest'
-            }
+    }
+    post {
+        success {
+            echo 'Deployment was successful!'
         }
+        failure {
+            echo 'Deployment failed.'
+        }
+    }
+}
 
-        stage('Deploy') {
-            steps {
-                echo 'Deploying application...'
-                sh 'docker compose down && docker compose up -d'
-            }
         }
     }
 }
