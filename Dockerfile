@@ -1,32 +1,38 @@
-# Базовий образ для Jenkins
-FROM jenkins/jenkins:lts as jenkins_base
+# Використання базового образу Python для Flask
+FROM python:3.9-slim as app_base
 
-# Перехід до root-користувача для встановлення залежностей
+# Робочий каталог для Flask
+WORKDIR /app
+
+# Копіювання та встановлення залежностей
+COPY requirements.txt requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копіювання коду додатка
+COPY . .
+
+# Використання Gunicorn для запуску Flask
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+
+# Jenkins образ
+FROM jenkins/jenkins:lts-jdk11 as jenkins_base
+
+# Перехід до root для встановлення Docker
 USER root
 
-# Встановлення Docker CLI, Docker Compose, Python та інших інструментів
+# Встановлення Docker CLI та docker-compose plugin
 RUN apt-get update && apt-get install -y \
     docker.io \
     docker-compose-plugin \
-    python3 \
-    python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
-# Додавання Jenkins користувача до групи Docker
+# Додавання Jenkins до групи Docker
 RUN usermod -aG docker jenkins
-
-# Підготовка Python-залежностей
-COPY requirements.txt /app/requirements.txt
-RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
 # Повернення до користувача Jenkins
 USER jenkins
 
 # Робочий каталог для Jenkins
-WORKDIR /app
+WORKDIR /var/jenkins_home
 
-# Копіювання файлів додатка
-COPY . .
-
-# Команда для запуску Gunicorn (Flask-додатка)
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
+# Jenkins запускається автоматично
