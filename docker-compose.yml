@@ -1,50 +1,34 @@
-version: "3.9"
+version: '3.8'
 
 services:
-  db:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: tasks_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  web:
+  app:
     build:
       context: .
-      target: app
+      dockerfile: Dockerfile
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://user:1@db:5432/tasks_db
     ports:
       - "5000:5000"
-    environment:
-      FLASK_ENV: production
     depends_on:
       - db
     command: gunicorn -w 4 -b 0.0.0.0:5000 app:app
 
-  jenkins:
-    build:
-      context: .
-      target: jenkins
-    ports:
-      - "8080:8080"
-      - "50000:50000"
-    volumes:
-      - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
+  db:
+    image: postgres:13
     environment:
-      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: 1
+      POSTGRES_DB: tasks_db
+    ports:
+      - "5432:5432"
 
   prometheus:
     image: prom/prometheus
-    ports:
-      - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
 
   grafana:
     image: grafana/grafana
@@ -53,7 +37,18 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: root
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins_home:/var/jenkins_home
+
 volumes:
-  pgdata:
-  jenkins_home:
   grafana_data:
+  jenkins_home:

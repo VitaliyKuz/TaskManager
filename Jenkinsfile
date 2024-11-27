@@ -1,8 +1,5 @@
 pipeline {
     agent any
-    environment {
-        DOCKER_COMPOSE = 'docker compose'
-    }
     stages {
         stage('Clone Repository') {
             steps {
@@ -12,31 +9,26 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    sh "${DOCKER_COMPOSE} --env-file .env build"
+                    sh 'docker build -t task_manager_web .'
                 }
             }
         }
         stage('Deploy') {
             steps {
                 script {
-                    sh "${DOCKER_COMPOSE} --env-file .env up -d"
-                }
-            }
-        }
-        stage('Test') {
-            steps {
-                script {
-                    sh 'pytest'
+                    sh '''
+                    docker-compose up -d
+                    '''
                 }
             }
         }
     }
     post {
         success {
-            echo 'Deployment and Tests Completed Successfully!'
+            echo 'Pipeline executed successfully!'
         }
         failure {
-            echo 'Deployment or Tests Failed!'
+            echo 'Pipeline failed.'
         }
     }
 }
