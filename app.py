@@ -17,6 +17,7 @@ db = SQLAlchemy(app)
 task_counter = Counter('task_operations_total', 'Total task operations', ['operation'])
 
 class Task(db.Model):
+    __tablename__ = 'tasks'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
@@ -28,9 +29,12 @@ class Task(db.Model):
         return f"<Task {self.title}>"
 
 
+@app.before_first_request
 def initialize_database():
-    with app.app_context():
-        db.create_all()
+    """
+    Ensure that the database tables are created before handling any requests.
+    """
+    db.create_all()
 
 
 @app.route('/')
@@ -67,5 +71,4 @@ def metrics():
 
 
 if __name__ == '__main__':
-    initialize_database()
     app.run(host='0.0.0.0', port=5000)
