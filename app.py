@@ -1,12 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from prometheus_client import Counter, generate_latest
-from flask import Response
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Load variables from .env
+load_dotenv()  # Завантаження змінних із .env
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
