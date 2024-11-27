@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:13
@@ -9,6 +11,12 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
 
   web:
     build: .
@@ -17,8 +25,15 @@ services:
     environment:
       FLASK_ENV: production
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: gunicorn -w 4 -b 0.0.0.0:5000 app:app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
 
   jenkins:
     image: jenkins/jenkins:lts
@@ -29,6 +44,12 @@ services:
       - jenkins_home:/var/jenkins_home
     environment:
       JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   prometheus:
     image: prom/prometheus
@@ -36,6 +57,12 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   grafana:
     image: grafana/grafana
@@ -43,6 +70,14 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+    environment:
+      - GF_LOG_LEVEL=warn
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   pgdata:

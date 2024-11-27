@@ -6,7 +6,7 @@ from flask import Response
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Завантаження змінних із .env
+load_dotenv()  # Load variables from .env
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
