@@ -1,12 +1,12 @@
-from flask import Flask, render_template, request, redirect, url_for, Response
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from prometheus_client import Counter, generate_latest
+from flask import Response
 import os
 from dotenv import load_dotenv
 
-# Завантаження змінних середовища
-load_dotenv()
+load_dotenv()  # Завантаження змінних із .env
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
@@ -15,10 +15,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Метрика Prometheus
 task_counter = Counter('task_operations_total', 'Total task operations', ['operation'])
 
-# Модель для завдань
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -30,18 +28,18 @@ class Task(db.Model):
     def __repr__(self):
         return f"<Task {self.title}>"
 
-# Ініціалізація бази даних
+
 def initialize_database():
     with app.app_context():
         db.create_all()
 
-# Маршрут для головної сторінки
+
 @app.route('/')
 def index():
     tasks = Task.query.all()
     return render_template('index.html', tasks=tasks)
 
-# Додавання нового завдання
+
 @app.route('/add', methods=['POST'])
 def add_task():
     task_counter.labels(operation='add').inc()
@@ -54,7 +52,7 @@ def add_task():
     db.session.commit()
     return redirect(url_for('index'))
 
-# Видалення завдання
+
 @app.route('/delete/<int:task_id>')
 def delete_task(task_id):
     task_counter.labels(operation='delete').inc()
@@ -63,11 +61,12 @@ def delete_task(task_id):
     db.session.commit()
     return redirect(url_for('index'))
 
-# Маршрут для метрик Prometheus
+
 @app.route('/metrics')
 def metrics():
     return Response(generate_latest(), mimetype='text/plain')
 
+
 if __name__ == '__main__':
-    initialize_database()  # Виклик ініціалізації бази даних
+    initialize_database()  # Автоматичне створення таблиць при запуску
     app.run(host='0.0.0.0', port=5000)
