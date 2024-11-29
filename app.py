@@ -1,102 +1,78 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
-from prometheus_client import Counter, generate_latest
-from flask import Response
 import os
-from dotenv import load_dotenv
-
-load_dotenv()  # Завантаження змінних із .env
+from flask import Flask, render_template, request, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from sqlalchemy.exc import ProgrammingError
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL', 'postgresql://user:1@db:5432/tasks_db'
-)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 
-task_counter = Counter('task_operations_total', 'Total task operations', ['operation'])
+
+db_user = os.environ.get('POSTGRES_USER', 'user')
+db_password = os.environ.get('POSTGRES_PASSWORD', 'password')
+db_host = os.environ.get('POSTGRES_HOST', 'db')
+db_name = os.environ.get('POSTGRES_DB', 'task_manager')
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_user}:{db_password}@{db_host}:5432/{db_name}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    priority = db.Column(db.String(50), nullable=False)
-    due_date = db.Column(db.DateTime, nullable=False)
-    status = db.Column(db.String(50), default='active')
+    priority = db.Column(db.String(50), nullable=False, default='Medium')
+    due_date = db.Column(db.Date, nullable=True)
 
-    def __repr__(self):
-        return f"<Task {self.title}>"
-
-
+@app.before_first_request
 def initialize_database():
-    with app.app_context():
-        db.create_all()
-
+    """
+    Ensure that the database and tables are initialized before handling requests.
+    """
+    try:
+        db.create_all()  
+    except ProgrammingError as e:
+        print("Error during database initialization:", e)
 
 @app.route('/')
 def index():
-    tasks = Task.query.all()
+    """
+    Fetch and display tasks. Handle cases where the `Task` table does not exist.
+    """
+    try:
+        tasks = Task.query.order_by(Task.due_date).all()
+    except ProgrammingError:
+        tasks = []
+        print("Database is not ready or the `Task` table does not exist.")
     return render_template('index.html', tasks=tasks)
 
+@app.route('/tasks', methods=['POST'])
+def create_task():
+    """
+    Create a new task.
+    """
+    title = request.form['title']
+    description = request.form.get('description')
+    priority = request.form.get('priority', 'Medium')
+    due_date = request.form.get('due_date')
 
-@app.route('/add', methods=['POST'])
-def add_task():
-    try:
-        # Валідація введення
-        title = request.form['title']
-        if len(title) > 100:
-            flash("Title must not exceed 100 characters.")
-            return redirect(url_for('index'))
-
-        description = request.form['description']
-        if len(description) > 500:
-            flash("Description must not exceed 500 characters.")
-            return redirect(url_for('index'))
-
-        priority = request.form['priority']
-        if priority not in ['High', 'Medium', 'Low']:
-            flash("Invalid priority selected.")
-            return redirect(url_for('index'))
-
-        due_date_str = request.form['due_date']
-        try:
-            due_date = datetime.strptime(due_date_str, '%Y-%m-%d')
-        except ValueError:
-            flash("Invalid date format. Use YYYY-MM-DD.")
-            return redirect(url_for('index'))
-
-        # Додавання задачі
-        task = Task(title=title, description=description, priority=priority, due_date=due_date)
-        db.session.add(task)
-        db.session.commit()
-        task_counter.labels(operation='add').inc()
-        flash("Task added successfully!")
-    except Exception as e:
-        flash(f"An error occurred: {str(e)}")
+    new_task = Task(title=title, description=description, priority=priority, due_date=due_date)
+    db.session.add(new_task)
+    db.session.commit()
     return redirect(url_for('index'))
 
-
-@app.route('/delete/<int:task_id>')
+@app.route('/tasks/<int:task_id>', methods=['POST'])
 def delete_task(task_id):
-    try:
-        task = Task.query.get_or_404(task_id)
+    """
+    Delete an existing task.
+    """
+    task = Task.query.get(task_id)
+    if task:
         db.session.delete(task)
         db.session.commit()
-        task_counter.labels(operation='delete').inc()
-        flash("Task deleted successfully!")
-    except Exception as e:
-        flash(f"An error occurred: {str(e)}")
     return redirect(url_for('index'))
 
-
-@app.route('/metrics')
-def metrics():
-    return Response(generate_latest(), mimetype='text/plain')
-
-
-if __name__ == '__main__':
-    initialize_database()
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
