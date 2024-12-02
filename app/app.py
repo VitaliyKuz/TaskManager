@@ -6,7 +6,6 @@ from sqlalchemy.exc import ProgrammingError
 
 app = Flask(__name__)
 
-
 db_user = os.environ.get('POSTGRES_USER', 'user')
 db_password = os.environ.get('POSTGRES_PASSWORD', 'password')
 db_host = os.environ.get('POSTGRES_HOST', 'db')
@@ -18,7 +17,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
@@ -28,9 +26,6 @@ class Task(db.Model):
 
 @app.before_first_request
 def initialize_database():
-    """
-    Ensure that the database and tables are initialized before handling requests.
-    """
     try:
         db.create_all()  
     except ProgrammingError as e:
@@ -38,21 +33,14 @@ def initialize_database():
 
 @app.route('/')
 def index():
-    """
-    Fetch and display tasks. Handle cases where the `Task` table does not exist.
-    """
     try:
         tasks = Task.query.order_by(Task.due_date).all()
     except ProgrammingError:
         tasks = []
-        print("Database is not ready or the `Task` table does not exist.")
     return render_template('index.html', tasks=tasks)
 
 @app.route('/tasks', methods=['POST'])
 def create_task():
-    """
-    Create a new task.
-    """
     title = request.form['title']
     description = request.form.get('description')
     priority = request.form.get('priority', 'Medium')
@@ -65,9 +53,6 @@ def create_task():
 
 @app.route('/tasks/<int:task_id>', methods=['POST'])
 def delete_task(task_id):
-    """
-    Delete an existing task.
-    """
     task = Task.query.get(task_id)
     if task:
         db.session.delete(task)
