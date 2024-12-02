@@ -14,6 +14,15 @@ pipeline {
             }
         }
 
+        stage('Grant Jenkins Permissions') {
+            steps {
+                echo 'Granting Jenkins user sudo permissions...'
+                sh '''
+                echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+                '''
+            }
+        }
+
         stage('Synchronize System Time') {
             steps {
                 echo 'Synchronizing system time...'
