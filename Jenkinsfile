@@ -24,61 +24,9 @@ pipeline {
                     ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
                 else
                     echo "Installing NTP tools..."
-                    apt-get update && apt-get install -y ntpdate
-                    ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
+                    curl -s -o /dev/null http://pool.ntp.org || echo "Time synchronization skipped."
                 fi
                 '''
-            }
-        }
-
-        stage('Install AWS CLI') {
-            steps {
-                echo 'Installing AWS CLI...'
-                sh '''
-                if ! command -v aws &> /dev/null
-                then
-                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                    unzip -o awscliv2.zip
-                    ./aws/install -i /tmp/.aws-cli -b /tmp/.local/bin --update
-                    rm -rf awscliv2.zip aws/
-                    export PATH=/tmp/.local/bin:$PATH
-                    echo "AWS CLI installed successfully."
-                else
-                    echo "AWS CLI is already installed."
-                fi
-                '''
-            }
-        }
-
-        stage('Verify AWS Access') {
-            steps {
-                echo 'Verifying AWS Access...'
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS]]) {
-                    sh '''
-                    export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-                    export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-                    export PATH=/tmp/.local/bin:$PATH
-                    aws sts get-caller-identity --region $AWS_REGION
-                    '''
-                }
-            }
-        }
-
-        stage('Verify DigitalOcean Access') {
-            steps {
-                echo 'Verifying DigitalOcean Access...'
-                withCredentials([string(credentialsId: 'DO_Token', variable: 'DO_TOKEN')]) {
-                    sh '''
-                    if ! command -v curl &> /dev/null
-                    then
-                        echo "Installing curl..."
-                        apt-get update && apt-get install -y curl
-                    fi
-                    echo "Verifying DigitalOcean Token..."
-                    curl -X GET "https://api.digitalocean.com/v2/account" \
-                         -H "Authorization: Bearer $DO_TOKEN"
-                    '''
-                }
             }
         }
 
@@ -86,21 +34,12 @@ pipeline {
             steps {
                 echo 'Installing Terraform...'
                 sh '''
-                if ! command -v wget &> /dev/null
-                then
-                    echo "Installing wget..."
-                    apt-get update && apt-get install -y wget
-                fi
-
-                if ! command -v terraform &> /dev/null
-                then
-                    wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
-                    unzip terraform_1.6.0_linux_amd64.zip -d /usr/local/bin/
-                    rm -f terraform_1.6.0_linux_amd64.zip
-                    echo "Terraform installed successfully."
-                else
-                    echo "Terraform is already installed."
-                fi
+                mkdir -p ~/bin
+                curl -o ~/terraform.zip https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
+                unzip -o ~/terraform.zip -d ~/bin/
+                rm -f ~/terraform.zip
+                export PATH=~/bin:$PATH
+                terraform --version || echo "Terraform is not installed!"
                 '''
             }
         }
