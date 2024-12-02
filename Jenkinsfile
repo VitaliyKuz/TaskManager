@@ -4,9 +4,10 @@ pipeline {
         AWS_REGION = 'eu-central-1' // Регіон AWS
         AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS credentials у Jenkins
         DO_TOKEN = 'DO_Token' // Назва DigitalOcean токена у Jenkins
-        TERRAFORM_DIR = 'terraform' // Директорія з Terraform конфігураціями
+        TERRAFORM_DIR = 'terraform' // Єдина папка з Terraform конфігураціями
     }
     stages {
+        // Перші кроки
         stage('Clone Repository') {
             steps {
                 echo 'Cloning Repository...'
@@ -31,6 +32,25 @@ pipeline {
             }
         }
 
+        stage('Install AWS CLI') {
+            steps {
+                echo 'Installing AWS CLI...'
+                sh '''
+                if ! command -v aws &> /dev/null
+                then
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip -o awscliv2.zip
+                    ./aws/install -i /tmp/.aws-cli -b /tmp/.local/bin --update
+                    rm -rf awscliv2.zip aws/
+                    export PATH=/tmp/.local/bin:$PATH
+                    echo "AWS CLI installed successfully."
+                else
+                    echo "AWS CLI is already installed."
+                fi
+                '''
+            }
+        }
+
         stage('Verify AWS Access') {
             steps {
                 echo 'Verifying AWS Access...'
@@ -38,6 +58,7 @@ pipeline {
                     sh '''
                     export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
                     export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                    export PATH=/tmp/.local/bin:$PATH
                     aws sts get-caller-identity --region $AWS_REGION
                     '''
                 }
@@ -62,6 +83,7 @@ pipeline {
             }
         }
 
+        // Terraform етапи
         stage('Initialize Terraform') {
             steps {
                 echo 'Initializing Terraform...'
@@ -73,28 +95,20 @@ pipeline {
             }
         }
 
-        stage('Apply Terraform (AWS)') {
+        stage('Apply Terraform') {
             steps {
-                echo 'Applying Terraform configuration for AWS...'
-                dir("${TERRAFORM_DIR}/aws") {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS]]) {
+                echo 'Applying Terraform configuration for AWS and DigitalOcean...'
+                dir("${TERRAFORM_DIR}") {
+                    withCredentials([
+                        [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS],
+                        string(credentialsId: 'DO_Token', variable: 'DO_TOKEN')
+                    ]) {
                         sh '''
-                        terraform apply -var="aws_access_key=$AWS_ACCESS_KEY_ID" \
-                                        -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" \
-                                        -auto-approve
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Apply Terraform (DigitalOcean)') {
-            steps {
-                echo 'Applying Terraform configuration for DigitalOcean...'
-                dir("${TERRAFORM_DIR}/digitalocean") {
-                    withCredentials([string(credentialsId: 'DO_Token', variable: 'DO_TOKEN')]) {
-                        sh '''
-                        terraform apply -var="do_token=$DO_TOKEN" -auto-approve
+                        terraform apply \
+                            -var="aws_access_key=$AWS_ACCESS_KEY_ID" \
+                            -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" \
+                            -var="do_token=$DO_TOKEN" \
+                            -auto-approve
                         '''
                     }
                 }
