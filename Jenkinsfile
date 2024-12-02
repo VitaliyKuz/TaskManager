@@ -26,11 +26,12 @@ pipeline {
             }
         }
 
-        stage('Synchronize System Time') {
+        stage('Check System Time') {
             steps {
-                echo 'Synchronizing system time...'
+                echo 'Checking system time...'
                 sh '''
-                ntpdate -u pool.ntp.org || echo "Time synchronization failed."
+                echo "Current system time:"
+                date
                 '''
             }
         }
