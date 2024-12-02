@@ -20,11 +20,18 @@ pipeline {
             steps {
                 echo 'Synchronizing system time...'
                 sh '''
-                apt update && apt install -y ntpdate
-                ntpdate -u pool.ntp.org
+                if ! command -v ntpdate &> /dev/null
+                then
+                    echo "ntpdate not found. Downloading and installing..."
+                    curl -L -o /usr/local/bin/ntpdate https://github.com/ntp-project/ntp/releases/download/stable/ntpdate
+                    chmod +x /usr/local/bin/ntpdate
+                fi
+                echo "Synchronizing time with NTP server..."
+                /usr/local/bin/ntpdate -u pool.ntp.org || echo "Time synchronization failed."
                 '''
             }
         }
+
 
         stage('Install Terraform') {
             steps {
