@@ -21,11 +21,11 @@ pipeline {
                 if command -v ntpdate &> /dev/null
                 then
                     echo "Synchronizing time with NTP server..."
-                    sudo ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
+                    ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
                 else
                     echo "Installing NTP tools..."
-                    sudo apt-get update && sudo apt-get install -y ntpdate
-                    sudo ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
+                    apt-get update && apt-get install -y ntpdate
+                    ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
                 fi
                 '''
             }
@@ -72,7 +72,7 @@ pipeline {
                     if ! command -v curl &> /dev/null
                     then
                         echo "Installing curl..."
-                        sudo apt-get update && sudo apt-get install -y curl
+                        apt-get update && apt-get install -y curl
                     fi
                     echo "Verifying DigitalOcean Token..."
                     curl -X GET "https://api.digitalocean.com/v2/account" \
@@ -89,13 +89,13 @@ pipeline {
                 if ! command -v wget &> /dev/null
                 then
                     echo "Installing wget..."
-                    sudo apt-get update && sudo apt-get install -y wget
+                    apt-get update && apt-get install -y wget
                 fi
 
                 if ! command -v terraform &> /dev/null
                 then
                     wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
-                    sudo unzip terraform_1.6.0_linux_amd64.zip -d /usr/local/bin/
+                    unzip terraform_1.6.0_linux_amd64.zip -d /usr/local/bin/
                     rm -f terraform_1.6.0_linux_amd64.zip
                     echo "Terraform installed successfully."
                 else
