@@ -1,8 +1,9 @@
 pipeline {
     agent any
     environment {
-        AWS_REGION = 'eu-central-1' // Вкажіть ваш AWS регіон
+        AWS_REGION = 'eu-central-1' // Регіон AWS
         AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS credentials у Jenkins
+        DO_TOKEN = 'DO_Token' // Назва DigitalOcean токена у Jenkins
     }
     stages {
         stage('Clone Repository') {
@@ -61,10 +62,28 @@ pipeline {
                 }
             }
         }
+
+        stage('Verify DigitalOcean Access') {
+            steps {
+                echo 'Verifying DigitalOcean Access...'
+                withCredentials([string(credentialsId: 'DO_Token', variable: 'DO_Token')]) {
+                    sh '''
+                    if ! command -v curl &> /dev/null
+                    then
+                        echo "Installing curl..."
+                        apt-get update && apt-get install -y curl
+                    fi
+                    echo "Verifying DigitalOcean Token..."
+                    curl -X GET "https://api.digitalocean.com/v2/account" \
+                         -H "Authorization: Bearer $DO_Token"
+                    '''
+                }
+            }
+        }
     }
     post {
         success {
-            echo 'AWS CLI and credentials verified successfully.'
+            echo 'AWS and DigitalOcean credentials verified successfully.'
         }
         failure {
             echo 'Pipeline failed. Please check the logs for more details.'
