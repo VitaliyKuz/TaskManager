@@ -12,9 +12,9 @@ variable "aws_secret_key" {
 }
 
 variable "aws_ami_id" {
-  default     = "ami-0c02fb55956c7d316"
-  description = "Amazon Machine Image ID"
+  default = "ami-0030e6787a44f5fdc" # Ubuntu 20.04
 }
+
 
 variable "aws_instance_type" {
   default     = "t2.micro"
