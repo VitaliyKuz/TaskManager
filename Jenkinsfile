@@ -20,13 +20,8 @@ pipeline {
             steps {
                 echo 'Synchronizing system time...'
                 sh '''
-                if command -v ntpdate &> /dev/null
-                then
-                    echo "Synchronizing time with NTP server..."
-                    ntpdate -u pool.ntp.org || echo "Time synchronization skipped."
-                else
-                    echo "Installing ntpdate not possible, skipping..."
-                fi
+                apt update && apt install -y ntpdate
+                ntpdate -u pool.ntp.org
                 '''
             }
         }
@@ -36,11 +31,11 @@ pipeline {
                 echo 'Installing Terraform...'
                 sh '''
                 mkdir -p $CUSTOM_BIN
-                curl -o $CUSTOM_BIN/terraform.zip https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
+                curl -o $CUSTOM_BIN/terraform.zip https://releases.hashicorp.com/terraform/latest/terraform_latest_linux_amd64.zip
                 unzip -o $CUSTOM_BIN/terraform.zip -d $CUSTOM_BIN/
                 rm -f $CUSTOM_BIN/terraform.zip
                 chmod +x $CUSTOM_BIN/terraform
-                terraform --version || echo "Terraform is not installed!"
+                terraform --version
                 '''
             }
         }
