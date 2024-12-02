@@ -4,17 +4,25 @@ WORKDIR /app
 
 # Встановлюємо системні залежності, включаючи aws-cli
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    sudo \
     libpq-dev \
     gcc \
     build-essential \
     python3-dev \
     curl \
     unzip \
+    wget \
     && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install \
     && rm -rf awscliv2.zip aws/ \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Створюємо користувача jenkins і надаємо йому права sudo
+RUN useradd -m -s /bin/bash jenkins && echo "jenkins ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Встановлюємо користувача jenkins як активного користувача для виконання подальших команд
+USER jenkins
 
 # Копіюємо залежності Python та встановлюємо їх
 COPY requirements.txt .
