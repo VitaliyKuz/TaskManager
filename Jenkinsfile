@@ -20,18 +20,22 @@ pipeline {
             steps {
                 echo 'Installing dependencies...'
                 sh '''
-                apt-get update
-                apt-get install -y ntpdate curl unzip
+                if ! command -v ntpdate &> /dev/null; then
+                    apt-get update && apt-get install -y ntpdate curl unzip
+                else
+                    echo "Dependencies already installed."
+                fi
                 '''
             }
         }
 
-        stage('Check System Time') {
+        stage('Check and Sync System Time') {
             steps {
-                echo 'Checking system time...'
+                echo 'Checking and synchronizing system time...'
                 sh '''
                 echo "Current system time:"
                 date
+                ntpdate -u pool.ntp.org || echo "Time synchronization failed."
                 '''
             }
         }
@@ -50,54 +54,4 @@ pipeline {
             }
         }
 
-        stage('Initialize Terraform') {
-            steps {
-                echo 'Initializing Terraform...'
-                dir("${TERRAFORM_DIR}") {
-                    sh '''
-                    terraform init || exit 1
-                    '''
-                }
-            }
-        }
-
-        stage('Apply Terraform') {
-            steps {
-                echo 'Applying Terraform configuration for AWS and DigitalOcean...'
-                dir("${TERRAFORM_DIR}") {
-                    withCredentials([
-                        [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS],
-                        string(credentialsId: 'DO_Token', variable: 'DO_TOKEN')
-                    ]) {
-                        sh '''
-                        terraform apply \
-                            -var="aws_access_key=$AWS_ACCESS_KEY_ID" \
-                            -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" \
-                            -var="do_token=$DO_TOKEN" \
-                            -auto-approve || exit 1
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Validate Terraform Outputs') {
-            steps {
-                echo 'Validating Terraform Outputs...'
-                dir("${TERRAFORM_DIR}") {
-                    sh '''
-                    terraform output || exit 1
-                    '''
-                }
-            }
-        }
-    }
-    post {
-        success {
-            echo 'Pipeline completed successfully.'
-        }
-        failure {
-            echo 'Pipeline failed. Please check the logs for details.'
-        }
-    }
-}
+        stag
