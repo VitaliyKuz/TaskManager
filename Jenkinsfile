@@ -1,20 +1,44 @@
 pipeline {
     agent any
-
+    environment {
+        AWS_REGION = 'eu-central-1' // Вкажіть регіон AWS
+        AWS_CREDENTIALS = 'AWS_Credentials' // ID доданих AWS Credentials
+    }
     stages {
-        stage('Build') {
+        stage('Clone Repository') {
             steps {
-                echo 'Building..'
+                git branch: 'main', url: 'https://github.com/VitaliyKuz/TaskManager.git'
             }
         }
-        stage('Test') {
+        stage('Verify AWS Access') {
             steps {
-                echo 'Testing..'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS]]) {
+                    sh '''
+                    export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                    export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                    aws sts get-caller-identity --region $AWS_REGION
+                    '''
+                }
             }
         }
-        stage('Deploy') {
+        stage('Setup Terraform') {
             steps {
-                echo 'Deploying....'
+                dir('terraform') {
+                    sh 'terraform init'
+                }
+            }
+        }
+        stage('Apply Terraform') {
+            steps {
+                dir('terraform') {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS]]) {
+                        sh '''
+                        export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                        export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                        terraform apply -auto-approve
+                        '''
+                    }
+                }
             }
         }
     }
