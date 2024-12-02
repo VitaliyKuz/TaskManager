@@ -21,10 +21,9 @@ pipeline {
                 if command -v ntpdate &> /dev/null
                 then
                     echo "Synchronizing time with NTP server..."
-                    ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
+                    ntpdate -u pool.ntp.org || echo "Time synchronization skipped."
                 else
-                    echo "Installing NTP tools..."
-                    curl -s -o /dev/null http://pool.ntp.org || echo "Time synchronization skipped."
+                    echo "Installing ntpdate not possible, skipping..."
                 fi
                 '''
             }
