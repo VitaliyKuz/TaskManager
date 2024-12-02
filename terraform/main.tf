@@ -5,8 +5,10 @@ provider "aws" {
 }
 
 provider "digitalocean" {
-  token = var.do_token
+  token  = var.do_token
+  source = "digitalocean/digitalocean"
 }
+
 
 # AWS Resources
 resource "aws_security_group" "allow_http" {
