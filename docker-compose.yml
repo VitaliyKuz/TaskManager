@@ -56,7 +56,6 @@ services:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
     volumes:
       - jenkins_home:/var/jenkins_home  
-    user: root 
 
   grafana:
     image: grafana/grafana:latest
