@@ -5,6 +5,8 @@ pipeline {
         AWS_CREDENTIALS = 'AWS_Credentials'
         DO_TOKEN = 'DO_Token'
         TERRAFORM_DIR = 'terraform'
+        CUSTOM_BIN = '/var/jenkins_home/bin'
+        PATH = '/var/jenkins_home/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
     }
     stages {
         stage('Clone Repository') {
@@ -33,11 +35,11 @@ pipeline {
             steps {
                 echo 'Installing Terraform...'
                 sh '''
-                mkdir -p ~/bin
-                curl -o ~/terraform.zip https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
-                unzip -o ~/terraform.zip -d ~/bin/
-                rm -f ~/terraform.zip
-                export PATH=~/bin:$PATH
+                mkdir -p $CUSTOM_BIN
+                curl -o $CUSTOM_BIN/terraform.zip https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
+                unzip -o $CUSTOM_BIN/terraform.zip -d $CUSTOM_BIN/
+                rm -f $CUSTOM_BIN/terraform.zip
+                chmod +x $CUSTOM_BIN/terraform
                 terraform --version || echo "Terraform is not installed!"
                 '''
             }
