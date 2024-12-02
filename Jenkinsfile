@@ -21,18 +21,11 @@ pipeline {
                 echo 'Installing dependencies locally...'
                 sh '''
                 mkdir -p $CUSTOM_BIN
-                if [ ! -f "$CUSTOM_BIN/ntpdate" ]; then
-                    echo "Downloading ntpdate..."
-                    curl -L -o $CUSTOM_BIN/ntpdate https://github.com/ntp-project/ntp/releases/download/stable/ntpdate
-                    chmod +x $CUSTOM_BIN/ntpdate
-                fi
-
                 if [ ! -f "$CUSTOM_BIN/unzip" ]; then
                     echo "Downloading unzip..."
                     curl -L -o $CUSTOM_BIN/unzip https://github.com/nih-at/libzip/releases/download/v1.9.2/unzip
                     chmod +x $CUSTOM_BIN/unzip
                 fi
-
                 echo "Dependencies installed locally."
                 '''
             }
@@ -40,11 +33,12 @@ pipeline {
 
         stage('Check and Sync System Time') {
             steps {
-                echo 'Checking and synchronizing system time...'
+                echo 'Checking system time...'
                 sh '''
                 echo "Current system time:"
                 date
-                $CUSTOM_BIN/ntpdate -u pool.ntp.org || echo "Time synchronization failed."
+                echo "Checking network connectivity..."
+                curl -I https://www.google.com || echo "Network unreachable."
                 '''
             }
         }

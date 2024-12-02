@@ -58,3 +58,4 @@ resource "digitalocean_droplet" "app" {
   image  = "ubuntu-20-04-x64"
   name   = "TaskManager-DO"
   region = "fra1"
+}
