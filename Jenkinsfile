@@ -1,8 +1,8 @@
 pipeline {
     agent any
     environment {
-        AWS_REGION = 'eu-central-1' // Ваш регіон AWS
-        AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS облікових даних у Jenkins
+        AWS_REGION = 'eu-central-1' // Змініть на ваш регіон
+        AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS credentials у Jenkins
     }
     stages {
         stage('Clone Repository') {
@@ -11,6 +11,7 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/VitaliyKuz/TaskManager.git'
             }
         }
+
         stage('Install AWS CLI') {
             steps {
                 echo 'Installing AWS CLI...'
@@ -18,7 +19,7 @@ pipeline {
                 if ! command -v aws &> /dev/null
                 then
                     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                    unzip awscliv2.zip
+                    unzip -o awscliv2.zip
                     ./aws/install
                     rm -rf awscliv2.zip aws/
                 else
@@ -27,6 +28,7 @@ pipeline {
                 '''
             }
         }
+
         stage('Verify AWS Access') {
             steps {
                 echo 'Verifying AWS Access...'
@@ -38,6 +40,14 @@ pipeline {
                     '''
                 }
             }
+        }
+    }
+    post {
+        success {
+            echo 'AWS CLI and credentials verified successfully.'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs for more details.'
         }
     }
 }
