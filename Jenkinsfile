@@ -71,7 +71,6 @@ pipeline {
             }
         }
 
-
         stage('Apply Terraform') {
             steps {
                 echo 'Applying Terraform configuration for AWS and DigitalOcean...'
@@ -102,10 +101,22 @@ pipeline {
                 }
             }
         }
+
+        stage('Access Infrastructure') {
+            steps {
+                echo 'Displaying Terraform Outputs for infrastructure access:'
+                dir("${TERRAFORM_DIR}") {
+                    sh '''
+                    echo "AWS Instance Public IP: $(terraform output -raw aws_public_ip)"
+                    echo "DigitalOcean Droplet IP: $(terraform output -raw do_droplet_ip)"
+                    '''
+                }
+            }
+        }
     }
     post {
         success {
-            echo 'Pipeline completed successfully.'
+            echo 'Pipeline completed successfully. Infrastructure is ready.'
         }
         failure {
             echo 'Pipeline failed. Please check the logs for details.'
