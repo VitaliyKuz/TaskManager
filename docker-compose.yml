@@ -6,79 +6,23 @@ services:
       context: .
     depends_on:
       - db
-    networks:
-      - internal_net
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_HOST=db
       - FLASK_APP=app.py
-      - FLASK_DEBUG=1
-    expose:
-      - "5000"
+    ports:
+      - "5000:5000"
 
   db:
     image: postgres:13
-    networks:
-      - internal_net
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-    ports:
-      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  nginx:
-    image: nginx:latest
-    depends_on:
-      - web
-      - jenkins
-      - grafana
-      - prometheus
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    networks:
-      - internal_net
-
-  jenkins:
-    image: jenkins/jenkins:lts
-    networks:
-      - internal_net
-    ports:
-      - "8080:8080"
-    environment:
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
-    volumes:
-      - jenkins_home:/var/jenkins_home  
-
-  grafana:
-    image: grafana/grafana:latest
-    networks:
-      - internal_net
-    ports:
-      - "3000:3000"
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-
-  prometheus:
-    image: prom/prometheus:latest
-    networks:
-      - internal_net
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-
 volumes:
   db_data:
-  jenkins_home: 
-
-networks:
-  internal_net:
-    driver: bridge
