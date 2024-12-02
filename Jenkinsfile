@@ -65,11 +65,12 @@ pipeline {
                 echo 'Initializing Terraform...'
                 dir("${TERRAFORM_DIR}") {
                     sh '''
-                    $CUSTOM_BIN/terraform init || exit 1
+                    $CUSTOM_BIN/terraform init -upgrade || exit 1
                     '''
                 }
             }
         }
+
 
         stage('Apply Terraform') {
             steps {
