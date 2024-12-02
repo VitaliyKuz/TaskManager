@@ -20,10 +20,10 @@ pipeline {
                 then
                     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                     unzip -o awscliv2.zip
-                    ./aws/install -i $HOME/.aws-cli -b $HOME/.local/bin
+                    ./aws/install -i /tmp/.aws-cli -b /tmp/.local/bin
                     rm -rf awscliv2.zip aws/
-                    echo "export PATH=$HOME/.local/bin:$PATH" >> $HOME/.bashrc
-                    source $HOME/.bashrc
+                    export PATH=/tmp/.local/bin:$PATH
+                    echo "AWS CLI installed successfully."
                 else
                     echo "AWS CLI is already installed."
                 fi
@@ -38,6 +38,7 @@ pipeline {
                     sh '''
                     export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
                     export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                    export PATH=/tmp/.local/bin:$PATH
                     aws sts get-caller-identity --region $AWS_REGION
                     '''
                 }
