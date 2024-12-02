@@ -1,10 +1,10 @@
 pipeline {
     agent any
     environment {
-        AWS_REGION = 'eu-central-1' // Регіон AWS
-        AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS credentials у Jenkins
-        DO_TOKEN = 'DO_Token' // Назва DigitalOcean токена у Jenkins
-        TERRAFORM_DIR = 'terraform' // Єдина папка з Terraform конфігураціями
+        AWS_REGION = 'eu-central-1'
+        AWS_CREDENTIALS = 'AWS_Credentials'
+        DO_TOKEN = 'DO_Token'
+        TERRAFORM_DIR = 'terraform'
     }
     stages {
         stage('Clone Repository') {
@@ -21,11 +21,11 @@ pipeline {
                 if command -v ntpdate &> /dev/null
                 then
                     echo "Synchronizing time with NTP server..."
-                    ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
+                    sudo ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
                 else
                     echo "Installing NTP tools..."
-                    apt-get update && apt-get install -y ntpdate
-                    ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
+                    sudo apt-get update && sudo apt-get install -y ntpdate
+                    sudo ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
                 fi
                 '''
             }
@@ -72,7 +72,7 @@ pipeline {
                     if ! command -v curl &> /dev/null
                     then
                         echo "Installing curl..."
-                        apt-get update && apt-get install -y curl
+                        sudo apt-get update && sudo apt-get install -y curl
                     fi
                     echo "Verifying DigitalOcean Token..."
                     curl -X GET "https://api.digitalocean.com/v2/account" \
@@ -89,13 +89,13 @@ pipeline {
                 if ! command -v wget &> /dev/null
                 then
                     echo "Installing wget..."
-                    apt-get update && apt-get install -y wget
+                    sudo apt-get update && sudo apt-get install -y wget
                 fi
 
                 if ! command -v terraform &> /dev/null
                 then
                     wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
-                    unzip terraform_1.6.0_linux_amd64.zip -d /usr/local/bin/
+                    sudo unzip terraform_1.6.0_linux_amd64.zip -d /usr/local/bin/
                     rm -f terraform_1.6.0_linux_amd64.zip
                     echo "Terraform installed successfully."
                 else
