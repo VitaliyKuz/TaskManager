@@ -1,19 +1,13 @@
 pipeline {
     agent any
     environment {
-        AWS_REGION = 'us-east-1'  // Замініть на ваш AWS регіон
-        AWS_CREDENTIALS = 'AWS_Credentials'  // Ідентифікатор AWS Credentials у Jenkins
+        AWS_REGION = 'eu-central-1' // Змініть на ваш регіон
+        AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS credentials у Jenkins
     }
     stages {
-        stage('Setup Terraform') {
+        stage('Clone Repository') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS]]) {
-                    sh '''
-                    export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-                    export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-                    terraform init
-                    '''
-                }
+                git branch: 'main', url: 'https://github.com/VitaliyKuz/TaskManager.git'
             }
         }
         stage('Verify AWS Access') {
