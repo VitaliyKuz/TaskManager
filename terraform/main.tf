@@ -58,4 +58,13 @@ resource "digitalocean_droplet" "app" {
   image  = "ubuntu-20-04-x64"
   name   = "TaskManager-DO"
   region = "fra1"
+  size   = "s-1vcpu-1gb" # Виправлено, додано атрибут `size`
+
+  tags = ["TaskManager"]
+
+  connection {
+    type        = "ssh"
+    user        = "root"
+    private_key = file(var.ssh_private_key_path)
+  }
 }
