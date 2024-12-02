@@ -86,6 +86,12 @@ pipeline {
             steps {
                 echo 'Installing Terraform...'
                 sh '''
+                if ! command -v wget &> /dev/null
+                then
+                    echo "Installing wget..."
+                    apt-get update && apt-get install -y wget
+                fi
+
                 if ! command -v terraform &> /dev/null
                 then
                     wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
