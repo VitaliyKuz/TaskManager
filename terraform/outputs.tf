@@ -11,3 +11,7 @@ output "aws_public_ip" {
 output "do_droplet_ip" {
   value = digitalocean_droplet.app.ipv4_address
 }
+
+output "do_droplet_status" {
+  value = digitalocean_droplet.app.status
+}
