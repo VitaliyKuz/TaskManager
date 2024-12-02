@@ -5,8 +5,7 @@ provider "aws" {
 }
 
 provider "digitalocean" {
-  token  = var.do_token
-  source = "digitalocean/digitalocean"
+  token = var.do_token
 }
 
 
