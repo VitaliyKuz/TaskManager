@@ -54,6 +54,8 @@ services:
       - "8080:8080"
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    volumes:
+      - jenkins_home:/var/jenkins_home  
 
   grafana:
     image: grafana/grafana:latest
@@ -76,6 +78,7 @@ services:
 
 volumes:
   db_data:
+  jenkins_home: 
 
 networks:
   internal_net:
