@@ -12,6 +12,23 @@ pipeline {
             }
         }
 
+        stage('Synchronize System Time') {
+            steps {
+                echo 'Synchronizing system time...'
+                sh '''
+                if command -v ntpdate &> /dev/null
+                then
+                    echo "Synchronizing time with NTP server..."
+                    ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
+                else
+                    echo "Installing NTP tools..."
+                    apt-get update && apt-get install -y ntpdate
+                    ntpdate -u pool.ntp.org || echo "Time synchronization not required or already done."
+                fi
+                '''
+            }
+        }
+
         stage('Install AWS CLI') {
             steps {
                 echo 'Installing AWS CLI...'
