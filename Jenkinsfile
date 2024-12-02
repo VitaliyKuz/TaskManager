@@ -7,7 +7,6 @@ pipeline {
         TERRAFORM_DIR = 'terraform' // Єдина папка з Terraform конфігураціями
     }
     stages {
-        // Перші кроки
         stage('Clone Repository') {
             steps {
                 echo 'Cloning Repository...'
@@ -83,7 +82,23 @@ pipeline {
             }
         }
 
-        // Terraform етапи
+        stage('Install Terraform') {
+            steps {
+                echo 'Installing Terraform...'
+                sh '''
+                if ! command -v terraform &> /dev/null
+                then
+                    wget https://releases.hashicorp.com/terraform/1.6.0/terraform_1.6.0_linux_amd64.zip
+                    unzip terraform_1.6.0_linux_amd64.zip -d /usr/local/bin/
+                    rm -f terraform_1.6.0_linux_amd64.zip
+                    echo "Terraform installed successfully."
+                else
+                    echo "Terraform is already installed."
+                fi
+                '''
+            }
+        }
+
         stage('Initialize Terraform') {
             steps {
                 echo 'Initializing Terraform...'
