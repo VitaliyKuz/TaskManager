@@ -20,14 +20,16 @@ pipeline {
             steps {
                 echo 'Synchronizing system time...'
                 sh '''
+                CUSTOM_BIN=/var/jenkins_home/bin
                 if ! command -v ntpdate &> /dev/null
                 then
                     echo "ntpdate not found. Downloading and installing..."
-                    curl -L -o /usr/local/bin/ntpdate https://github.com/ntp-project/ntp/releases/download/stable/ntpdate
-                    chmod +x /usr/local/bin/ntpdate
+                    mkdir -p $CUSTOM_BIN
+                    curl -L -o $CUSTOM_BIN/ntpdate https://github.com/ntp-project/ntp/releases/download/stable/ntpdate
+                    chmod +x $CUSTOM_BIN/ntpdate
                 fi
                 echo "Synchronizing time with NTP server..."
-                /usr/local/bin/ntpdate -u pool.ntp.org || echo "Time synchronization failed."
+                $CUSTOM_BIN/ntpdate -u pool.ntp.org || echo "Time synchronization failed."
                 '''
             }
         }
