@@ -1,14 +1,23 @@
 pipeline {
     agent any
     environment {
-        AWS_REGION = 'eu-central-1' // Вкажіть ваш AWS регіон
-        AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS credentials у Jenkins
+        AWS_REGION = 'eu-central-1'
+        AWS_CREDENTIALS = 'AWS_Credentials'
     }
     stages {
         stage('Clone Repository') {
             steps {
                 echo 'Cloning Repository...'
                 git branch: 'main', url: 'https://github.com/VitaliyKuz/TaskManager.git'
+            }
+        }
+
+        stage('Sync System Time') {
+            steps {
+                echo 'Synchronizing system time...'
+                sh '''
+                sudo ntpdate -u pool.ntp.org || echo "NTP sync skipped if already up-to-date."
+                '''
             }
         }
 
