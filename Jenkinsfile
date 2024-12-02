@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        AWS_REGION = 'eu-central-1' // Змініть на ваш регіон
+        AWS_REGION = 'eu-central-1' // Вкажіть ваш AWS регіон
         AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS credentials у Jenkins
     }
     stages {
@@ -20,8 +20,10 @@ pipeline {
                 then
                     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
                     unzip -o awscliv2.zip
-                    ./aws/install
+                    ./aws/install -i $HOME/.aws-cli -b $HOME/.local/bin
                     rm -rf awscliv2.zip aws/
+                    echo "export PATH=$HOME/.local/bin:$PATH" >> $HOME/.bashrc
+                    source $HOME/.bashrc
                 else
                     echo "AWS CLI is already installed."
                 fi
