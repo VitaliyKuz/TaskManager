@@ -16,15 +16,24 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Install Dependencies Locally') {
             steps {
-                echo 'Installing dependencies...'
+                echo 'Installing dependencies locally...'
                 sh '''
-                if ! command -v ntpdate &> /dev/null; then
-                    apt-get update && apt-get install -y ntpdate curl unzip
-                else
-                    echo "Dependencies already installed."
+                mkdir -p $CUSTOM_BIN
+                if [ ! -f "$CUSTOM_BIN/ntpdate" ]; then
+                    echo "Downloading ntpdate..."
+                    curl -L -o $CUSTOM_BIN/ntpdate https://github.com/ntp-project/ntp/releases/download/stable/ntpdate
+                    chmod +x $CUSTOM_BIN/ntpdate
                 fi
+
+                if [ ! -f "$CUSTOM_BIN/unzip" ]; then
+                    echo "Downloading unzip..."
+                    curl -L -o $CUSTOM_BIN/unzip https://github.com/nih-at/libzip/releases/download/v1.9.2/unzip
+                    chmod +x $CUSTOM_BIN/unzip
+                fi
+
+                echo "Dependencies installed locally."
                 '''
             }
         }
@@ -35,20 +44,23 @@ pipeline {
                 sh '''
                 echo "Current system time:"
                 date
-                ntpdate -u pool.ntp.org || echo "Time synchronization failed."
+                $CUSTOM_BIN/ntpdate -u pool.ntp.org || echo "Time synchronization failed."
                 '''
             }
         }
 
         stage('Install Terraform') {
             steps {
-                echo 'Installing Terraform...'
+                echo 'Installing Terraform locally...'
                 sh '''
                 mkdir -p $CUSTOM_BIN
-                curl -o $CUSTOM_BIN/terraform.zip https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
-                unzip -o $CUSTOM_BIN/terraform.zip -d $CUSTOM_BIN/
-                rm -f $CUSTOM_BIN/terraform.zip
-                chmod +x $CUSTOM_BIN/terraform
+                if [ ! -f "$CUSTOM_BIN/terraform" ]; then
+                    echo "Downloading Terraform..."
+                    curl -o $CUSTOM_BIN/terraform.zip https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip
+                    $CUSTOM_BIN/unzip $CUSTOM_BIN/terraform.zip -d $CUSTOM_BIN/
+                    rm -f $CUSTOM_BIN/terraform.zip
+                    chmod +x $CUSTOM_BIN/terraform
+                fi
                 $CUSTOM_BIN/terraform --version
                 '''
             }
@@ -59,7 +71,7 @@ pipeline {
                 echo 'Initializing Terraform...'
                 dir("${TERRAFORM_DIR}") {
                     sh '''
-                    terraform init || exit 1
+                    $CUSTOM_BIN/terraform init || exit 1
                     '''
                 }
             }
@@ -74,7 +86,7 @@ pipeline {
                         string(credentialsId: 'DO_Token', variable: 'DO_TOKEN')
                     ]) {
                         sh '''
-                        terraform apply \
+                        $CUSTOM_BIN/terraform apply \
                             -var="aws_access_key=$AWS_ACCESS_KEY_ID" \
                             -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" \
                             -var="do_token=$DO_TOKEN" \
@@ -90,7 +102,7 @@ pipeline {
                 echo 'Validating Terraform Outputs...'
                 dir("${TERRAFORM_DIR}") {
                     sh '''
-                    terraform output || exit 1
+                    $CUSTOM_BIN/terraform output || exit 1
                     '''
                 }
             }
