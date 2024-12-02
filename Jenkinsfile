@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.12-slim' // Використовується Python з усіма основними утилітами
+            args '-u root' // Виконання команд як root
+        }
+    }
     environment {
         AWS_REGION = 'eu-central-1'
         AWS_CREDENTIALS = 'AWS_Credentials'
@@ -20,8 +25,7 @@ pipeline {
             steps {
                 echo 'Installing dependencies...'
                 sh '''
-                apt-get update
-                apt-get install -y ntpdate curl unzip
+                apt-get update && apt-get install -y curl unzip
                 '''
             }
         }
