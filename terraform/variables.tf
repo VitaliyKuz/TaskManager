@@ -1,25 +1,20 @@
-variable "azure_subscription_id" {
-  description = "Azure Subscription ID"
+# AWS Variables
+variable "aws_region" {
+  default = "eu-central-1"
 }
 
-variable "azure_tenant_id" {
-  description = "Azure Tenant ID"
+variable "aws_access_key" {}
+variable "aws_secret_key" {}
+variable "aws_ami_id" {
+  default = "ami-0c02fb55956c7d316" # Змініть на доступну AMI у вашому регіоні
 }
 
-variable "azure_client_id" {
-  description = "Azure Client ID"
+variable "aws_instance_type" {
+  default = "t2.micro"
 }
 
-variable "azure_client_secret" {
-  description = "Azure Client Secret"
-  sensitive   = true
-}
-
-variable "gcp_project" {
-  description = "Google Cloud Project ID"
-}
-
-variable "gcp_region" {
-  description = "Preferred Google Cloud Region"
-  default     = "us-central1"
+# DigitalOcean Variables
+variable "do_token" {}
+variable "ssh_private_key_path" {
+  default = "~/.ssh/id_rsa"
 }

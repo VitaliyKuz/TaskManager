@@ -4,7 +4,6 @@ pipeline {
         AWS_REGION = 'eu-central-1' // Регіон AWS
         AWS_CREDENTIALS = 'AWS_Credentials' // Назва AWS credentials у Jenkins
         DO_TOKEN = 'DO_Token' // Назва DigitalOcean токена у Jenkins
-        TERRAFORM_DIR = 'terraform' // Директорія з Terraform конфігураціями
     }
     stages {
         stage('Clone Repository') {
@@ -31,60 +30,60 @@ pipeline {
             }
         }
 
-        stage('Initialize Terraform') {
+        stage('Install AWS CLI') {
             steps {
-                echo 'Initializing Terraform...'
-                dir("${TERRAFORM_DIR}") {
+                echo 'Installing AWS CLI...'
+                sh '''
+                if ! command -v aws &> /dev/null
+                then
+                    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                    unzip -o awscliv2.zip
+                    ./aws/install -i /tmp/.aws-cli -b /tmp/.local/bin --update
+                    rm -rf awscliv2.zip aws/
+                    export PATH=/tmp/.local/bin:$PATH
+                    echo "AWS CLI installed successfully."
+                else
+                    echo "AWS CLI is already installed."
+                fi
+                '''
+            }
+        }
+
+        stage('Verify AWS Access') {
+            steps {
+                echo 'Verifying AWS Access...'
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS]]) {
                     sh '''
-                    terraform init
+                    export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+                    export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+                    export PATH=/tmp/.local/bin:$PATH
+                    aws sts get-caller-identity --region $AWS_REGION
                     '''
                 }
             }
         }
 
-        stage('Apply Terraform (AWS)') {
+        stage('Verify DigitalOcean Access') {
             steps {
-                echo 'Applying Terraform configuration for AWS...'
-                dir("${TERRAFORM_DIR}/aws") {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: AWS_CREDENTIALS]]) {
-                        sh '''
-                        terraform apply -var="aws_access_key=$AWS_ACCESS_KEY_ID" \
-                                        -var="aws_secret_key=$AWS_SECRET_ACCESS_KEY" \
-                                        -auto-approve
-                        '''
-                    }
+                echo 'Verifying DigitalOcean Access...'
+                withCredentials([string(credentialsId: 'DO_Token', variable: 'DO_Token')]) {
+                    sh '''
+                    if ! command -v curl &> /dev/null
+                    then
+                        echo "Installing curl..."
+                        apt-get update && apt-get install -y curl
+                    fi
+                    echo "Verifying DigitalOcean Token..."
+                    curl -X GET "https://api.digitalocean.com/v2/account" \
+                         -H "Authorization: Bearer $DO_Token"
+                    '''
                 }
-            }
-        }
-
-        stage('Apply Terraform (DigitalOcean)') {
-            steps {
-                echo 'Applying Terraform configuration for DigitalOcean...'
-                dir("${TERRAFORM_DIR}/digitalocean") {
-                    withCredentials([string(credentialsId: 'DO_Token', variable: 'DO_TOKEN')]) {
-                        sh '''
-                        terraform apply -var="do_token=$DO_TOKEN" -auto-approve
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Collect Metrics') {
-            steps {
-                echo 'Collecting metrics from Prometheus...'
-                sh '''
-                curl -s "http://localhost:9090/api/v1/query?query=up" > metrics_up.json
-                curl -s "http://localhost:9090/api/v1/query?query=node_cpu_seconds_total" > metrics_cpu.json
-                curl -s "http://localhost:9090/api/v1/query?query=node_memory_MemAvailable_bytes" > metrics_memory.json
-                curl -s "http://localhost:9090/api/v1/query?query=node_network_transmit_bytes_total" > metrics_network.json
-                '''
             }
         }
     }
     post {
         success {
-            echo 'Infrastructure deployed and metrics collected successfully.'
+            echo 'AWS and DigitalOcean credentials verified successfully.'
         }
         failure {
             echo 'Pipeline failed. Please check the logs for more details.'

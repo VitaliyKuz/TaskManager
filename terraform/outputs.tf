@@ -1,7 +1,13 @@
-output "azure_resource_group_name" {
-  value = azurerm_resource_group.main.name
+# AWS Outputs
+output "aws_instance_id" {
+  value = aws_instance.app.id
 }
 
-output "gcp_instance_ip" {
-  value = google_compute_instance.main.network_interface[0].access_config[0].nat_ip
+output "aws_public_ip" {
+  value = aws_instance.app.public_ip
+}
+
+# DigitalOcean Outputs
+output "do_droplet_ip" {
+  value = digitalocean_droplet.app.ipv4_address
 }
