@@ -1,7 +1,7 @@
 services:
   flask_app:
     build:
-      context: ../Docker
+      context: ./Docker
       dockerfile: Dockerfile-flask
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
@@ -16,7 +16,7 @@ services:
 
   digitalocean-exporter:
     build:
-      context: ../Docker
+      context: ./Docker
       dockerfile: Dockerfile-digitalocean
     ports:
       - "8000:8000"
@@ -65,5 +65,5 @@ services:
       - --config.file=/config.yml
 
 volumes:
-  db_data: 
+  db_data:
   grafana_data:
