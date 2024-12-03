@@ -1,11 +1,9 @@
+# Dockerfile-digitalocean
 FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY digitalocean_exporter.py .
-
-RUN pip install flask requests
-
-EXPOSE 8000
+# Copy application source code
+COPY digitalocean/digitalocean_exporter.py .
 
 CMD ["python", "digitalocean_exporter.py"]

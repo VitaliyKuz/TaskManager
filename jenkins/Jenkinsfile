@@ -73,7 +73,7 @@ EOF
                     steps {
                         sshagent(['aws-ssh-key']) {
                             sh '''
-                            scp -o StrictHostKeyChecking=no -r Docker/* app digitalocean .env ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env ec2-user@$AWS_SERVER_IP:~/deploy/
                             '''
                         }
                     }
@@ -82,13 +82,14 @@ EOF
                     steps {
                         sshagent(['do-ssh-key']) {
                             sh '''
-                            scp -o StrictHostKeyChecking=no -r Docker/* app digitalocean .env root@$DO_SERVER_IP:/root/deploy/
+                            scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env root@$DO_SERVER_IP:/root/deploy/
                             '''
                         }
                     }
                 }
             }
         }
+
 
         stage('Deploy to AWS') {
             steps {
