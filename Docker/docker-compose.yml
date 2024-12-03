@@ -1,9 +1,9 @@
-version: "3.9"
+
 
 services:
   flask_app:
     build:
-      context: ../app
+      context: ./app
       dockerfile: Dockerfile-flask
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
