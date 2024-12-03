@@ -73,10 +73,7 @@ EOF
                     steps {
                         sshagent(['aws-ssh-key']) {
                             sh '''
-                            scp -o StrictHostKeyChecking=no -r Docker ec2-user@$AWS_SERVER_IP:~/deploy/
-                            scp -o StrictHostKeyChecking=no -r app ec2-user@$AWS_SERVER_IP:~/deploy/
-                            scp -o StrictHostKeyChecking=no -r digitalocean ec2-user@$AWS_SERVER_IP:~/deploy/
-                            scp -o StrictHostKeyChecking=no .env ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env ec2-user@$AWS_SERVER_IP:~/deploy/
                             '''
                         }
                     }
@@ -85,10 +82,7 @@ EOF
                     steps {
                         sshagent(['do-ssh-key']) {
                             sh '''
-                            scp -o StrictHostKeyChecking=no -r Docker root@$DO_SERVER_IP:/root/deploy/
-                            scp -o StrictHostKeyChecking=no -r app root@$DO_SERVER_IP:/root/deploy/
-                            scp -o StrictHostKeyChecking=no -r digitalocean root@$DO_SERVER_IP:/root/deploy/
-                            scp -o StrictHostKeyChecking=no .env root@$DO_SERVER_IP:/root/deploy/
+                            scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env root@$DO_SERVER_IP:/root/deploy/
                             '''
                         }
                     }
@@ -101,9 +95,9 @@ EOF
                 sshagent(['aws-ssh-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
-                    cd ~/deploy/Docker
-                    docker-compose --env-file ../.env down
-                    docker-compose --env-file ../.env up -d
+                    cd ~/deploy
+                    docker-compose --env-file .env down
+                    docker-compose --env-file .env up -d
                     exit
 EOF
                     '''
@@ -116,9 +110,9 @@ EOF
                 sshagent(['do-ssh-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
-                    cd /root/deploy/Docker
-                    docker-compose --env-file ../.env down
-                    docker-compose --env-file ../.env up -d
+                    cd /root/deploy
+                    docker-compose --env-file .env down
+                    docker-compose --env-file .env up -d
                     exit
 EOF
                     '''
