@@ -2,10 +2,8 @@ pipeline {
     agent any
 
     environment {
-        AWS_SERVER_IP = credentials('aws-server-ip') // AWS server IP from Jenkins credentials
-        DO_SERVER_IP  = credentials('do-server-ip') // DO server IP from Jenkins credentials
-        AWS_ACCESS_KEY_ID = credentials('aws-access-key-id') // AWS Access Key ID
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key') // AWS Secret Key
+        AWS_SERVER_IP = credentials('aws-server-ip')
+        DO_SERVER_IP  = credentials('do-server-ip')
     }
 
     stages {
@@ -51,8 +49,7 @@ EOF
                 }
             }
         }
-
-        stage('Copy Files to Servers') {
+        stage('Copy Docker Compose and .env') {
             parallel {
                 stage('Copy to AWS') {
                     steps {
@@ -62,6 +59,7 @@ EOF
                             scp -o StrictHostKeyChecking=no .env ec2-user@$AWS_SERVER_IP:~/deploy/
                             scp -o StrictHostKeyChecking=no Docker/prometheus.yml ec2-user@$AWS_SERVER_IP:~/deploy/
                             scp -o StrictHostKeyChecking=no Docker/cloudwatch-config.yml ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -o StrictHostKeyChecking=no -r app ec2-user@$AWS_SERVER_IP:~/deploy/
                             '''
                         }
                     }
@@ -73,6 +71,7 @@ EOF
                             scp -o StrictHostKeyChecking=no Docker/docker-compose.yml root@$DO_SERVER_IP:/root/deploy/
                             scp -o StrictHostKeyChecking=no .env root@$DO_SERVER_IP:/root/deploy/
                             scp -o StrictHostKeyChecking=no Docker/prometheus.yml root@$DO_SERVER_IP:/root/deploy/
+                            scp -o StrictHostKeyChecking=no -r app root@$DO_SERVER_IP:/root/deploy/
                             '''
                         }
                     }
