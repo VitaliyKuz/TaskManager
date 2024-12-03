@@ -96,8 +96,8 @@ EOF
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
                     cd ~/deploy
-                    docker-compose --env-file .env down
-                    docker-compose --env-file .env up -d
+                    docker-compose --env-file .env -f Docker/docker-compose.yml down
+                    docker-compose --env-file .env -f Docker/docker-compose.yml up -d
                     exit
 EOF
                     '''
@@ -111,8 +111,8 @@ EOF
                     sh '''
                     ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
                     cd /root/deploy
-                    docker-compose --env-file .env down
-                    docker-compose --env-file .env up -d
+                    docker-compose --env-file .env -f Docker/docker-compose.yml down
+                    docker-compose --env-file .env -f Docker/docker-compose.yml up -d
                     exit
 EOF
                     '''
