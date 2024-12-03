@@ -50,13 +50,16 @@ EOF
             }
         }
 
-        stage('Copy Docker Compose') {
+        stage('Copy Docker Compose and .env') {
             parallel {
                 stage('Copy to AWS') {
                     steps {
                         sshagent(['aws-ssh-key']) {
                             sh '''
-                            scp -o StrictHostKeyChecking=no docker-compose.yml ec2-user@$AWS_SERVER_IP:~/deploy/docker-compose.yml
+                            scp -o StrictHostKeyChecking=no Docker/docker-compose.yml ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -o StrictHostKeyChecking=no .env ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -o StrictHostKeyChecking=no Docker/prometheus.yml ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -o StrictHostKeyChecking=no Docker/cloudwatch-config.yml ec2-user@$AWS_SERVER_IP:~/deploy/
                             '''
                         }
                     }
@@ -65,7 +68,9 @@ EOF
                     steps {
                         sshagent(['do-ssh-key']) {
                             sh '''
-                            scp -o StrictHostKeyChecking=no docker-compose.yml root@$DO_SERVER_IP:/root/deploy/docker-compose.yml
+                            scp -o StrictHostKeyChecking=no Docker/docker-compose.yml root@$DO_SERVER_IP:/root/deploy/
+                            scp -o StrictHostKeyChecking=no .env root@$DO_SERVER_IP:/root/deploy/
+                            scp -o StrictHostKeyChecking=no Docker/prometheus.yml root@$DO_SERVER_IP:/root/deploy/
                             '''
                         }
                     }
