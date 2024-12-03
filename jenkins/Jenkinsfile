@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         AWS_SERVER_IP = credentials('aws-server-ip')
-        DO_SERVER_IP  = credentials('do-server-ip')
+        DO_SERVER_IP = credentials('do-server-ip')
         AWS_ACCESS_KEY_ID = credentials('aws-credentials-id')
         AWS_SECRET_ACCESS_KEY = credentials('aws-credentials-id')
         DO_API_TOKEN = credentials('do-credentials-id')
@@ -73,7 +73,7 @@ EOF
                     steps {
                         sshagent(['aws-ssh-key']) {
                             sh '''
-                            scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -o StrictHostKeyChecking=no -r Docker/* app digitalocean .env ec2-user@$AWS_SERVER_IP:~/deploy/
                             '''
                         }
                     }
@@ -82,7 +82,7 @@ EOF
                     steps {
                         sshagent(['do-ssh-key']) {
                             sh '''
-                            scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env root@$DO_SERVER_IP:/root/deploy/
+                            scp -o StrictHostKeyChecking=no -r Docker/* app digitalocean .env root@$DO_SERVER_IP:/root/deploy/
                             '''
                         }
                     }
@@ -96,8 +96,8 @@ EOF
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
                     cd ~/deploy
-                    docker-compose --env-file .env -f Docker/docker-compose.yml down
-                    docker-compose --env-file .env -f Docker/docker-compose.yml up -d
+                    docker-compose --env-file .env down
+                    docker-compose --env-file .env up -d
                     exit
 EOF
                     '''
@@ -111,8 +111,8 @@ EOF
                     sh '''
                     ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
                     cd /root/deploy
-                    docker-compose --env-file .env -f Docker/docker-compose.yml down
-                    docker-compose --env-file .env -f Docker/docker-compose.yml up -d
+                    docker-compose --env-file .env down
+                    docker-compose --env-file .env up -d
                     exit
 EOF
                     '''
