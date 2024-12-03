@@ -18,7 +18,7 @@ pipeline {
             steps {
                 sshagent(['aws-ssh-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << 'EOF'
+                    ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
                     sudo yum update -y
                     sudo yum install -y docker
                     sudo systemctl start docker
@@ -26,7 +26,8 @@ pipeline {
                     sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
                     sudo chmod +x /usr/local/bin/docker-compose
                     mkdir -p ~/deploy
-                    EOF
+                    exit
+EOF
                     '''
                 }
             }
@@ -36,18 +37,18 @@ pipeline {
             steps {
                 sshagent(['do-ssh-key']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << 'EOF'
+                    ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
                     apt-get update
                     apt-get install -y docker.io
                     curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
                     chmod +x /usr/local/bin/docker-compose
                     mkdir -p /root/deploy
-                    EOF
+                    exit
+EOF
                     '''
                 }
             }
         }
-
 
         stage('Copy Docker Compose') {
             parallel {
@@ -80,7 +81,8 @@ pipeline {
                     cd ~/deploy
                     docker-compose down
                     docker-compose up -d
-                    EOF
+                    exit
+EOF
                     '''
                 }
             }
@@ -94,7 +96,8 @@ pipeline {
                     cd /root/deploy
                     docker-compose down
                     docker-compose up -d
-                    EOF
+                    exit
+EOF
                     '''
                 }
             }
