@@ -59,7 +59,7 @@ services:
 
   digitalocean-exporter:
     build:
-      context: ./digitalocean
+      context: ../digitalocean
       dockerfile: Dockerfile-digitalocean
     ports:
       - "8000:8000"
@@ -67,5 +67,5 @@ services:
       - DO_API_TOKEN=${DO_API_TOKEN}
 
 volumes:
-  db_data:
+  db_data: 
   grafana_data:
