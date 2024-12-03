@@ -104,10 +104,10 @@ EOF
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
                     cd ~/deploy
-                    docker-compose down
-                    docker-compose up -d
+                    docker-compose --env-file .env down
+                    docker-compose --env-file .env up -d
                     exit
-EOF
+        EOF
                     '''
                 }
             }
@@ -119,14 +119,15 @@ EOF
                     sh '''
                     ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
                     cd /root/deploy
-                    docker-compose down
-                    docker-compose up -d
+                    docker-compose --env-file .env down
+                    docker-compose --env-file .env up -d
                     exit
-EOF
+        EOF
                     '''
                 }
             }
         }
+
 
         stage('Verify Deployment') {
             parallel {

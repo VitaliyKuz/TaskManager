@@ -1,7 +1,7 @@
 services:
   flask_app:
     build:
-      context: ./app
+      context: ../Docker
       dockerfile: Dockerfile-flask
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
@@ -13,6 +13,15 @@ services:
     depends_on:
       - db
     restart: always
+
+  digitalocean-exporter:
+    build:
+      context: ../Docker
+      dockerfile: Dockerfile-digitalocean
+    ports:
+      - "8000:8000"
+    environment:
+      - DO_API_TOKEN=${DO_API_TOKEN}
 
   db:
     image: postgres:14
@@ -55,15 +64,6 @@ services:
     command:
       - --config.file=/config.yml
 
-  digitalocean-exporter:
-    build:
-      context: ./digitalocean
-      dockerfile: Dockerfile-digitalocean
-    ports:
-      - "8000:8000"
-    environment:
-      - DO_API_TOKEN=${DO_API_TOKEN}
-
 volumes:
-  db_data:
+  db_data: 
   grafana_data:
