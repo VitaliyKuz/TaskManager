@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        AWS_SERVER_IP = credentials('aws-server-ip') // IP сервера AWS
-        DO_SERVER_IP  = credentials('do-server-ip')  // IP сервера DigitalOcean
+        AWS_SERVER_IP = credentials('aws-server-ip')
+        DO_SERVER_IP  = credentials('do-server-ip')
     }
 
     stages {
@@ -23,7 +23,7 @@ pipeline {
                     sudo yum install -y docker
                     sudo systemctl start docker
                     sudo usermod -aG docker ec2-user
-                    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
                     sudo chmod +x /usr/local/bin/docker-compose
                     mkdir -p ~/deploy
                     EOF
@@ -39,9 +39,9 @@ pipeline {
                     ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
                     apt-get update
                     apt-get install -y docker.io
-                    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-                    chmod +x /usr/local/bin/docker-compose
-                    mkdir -p ~/deploy
+                    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                    sudo chmod +x /usr/local/bin/docker-compose
+                    mkdir -p /root/deploy
                     EOF
                     '''
                 }
