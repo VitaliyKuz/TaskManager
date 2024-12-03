@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        AWS_SERVER_IP = credentials('aws-server-ip')
-        DO_SERVER_IP  = credentials('do-server-ip')
+        AWS_SERVER_IP = credentials('aws-server-ip') // IP сервера AWS
+        DO_SERVER_IP  = credentials('do-server-ip')  // IP сервера DigitalOcean
     }
 
     stages {
@@ -14,11 +14,69 @@ pipeline {
             }
         }
 
+        stage('Prepare AWS Server') {
+            steps {
+                sshagent(['aws-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
+                    sudo yum update -y
+                    sudo yum install -y docker
+                    sudo systemctl start docker
+                    sudo usermod -aG docker ec2-user
+                    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                    sudo chmod +x /usr/local/bin/docker-compose
+                    mkdir -p ~/deploy
+                    EOF
+                    '''
+                }
+            }
+        }
+
+        stage('Prepare DigitalOcean Server') {
+            steps {
+                sshagent(['do-ssh-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
+                    apt-get update
+                    apt-get install -y docker.io
+                    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                    chmod +x /usr/local/bin/docker-compose
+                    mkdir -p ~/deploy
+                    EOF
+                    '''
+                }
+            }
+        }
+
+        stage('Copy Docker Compose') {
+            parallel {
+                stage('Copy to AWS') {
+                    steps {
+                        sshagent(['aws-ssh-key']) {
+                            sh '''
+                            scp -o StrictHostKeyChecking=no docker-compose.yml ec2-user@$AWS_SERVER_IP:~/deploy/docker-compose.yml
+                            '''
+                        }
+                    }
+                }
+                stage('Copy to DigitalOcean') {
+                    steps {
+                        sshagent(['do-ssh-key']) {
+                            sh '''
+                            scp -o StrictHostKeyChecking=no docker-compose.yml root@$DO_SERVER_IP:/root/deploy/docker-compose.yml
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Deploy to AWS') {
             steps {
                 sshagent(['aws-ssh-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
+                    cd ~/deploy
                     docker-compose down
                     docker-compose up -d
                     EOF
@@ -32,6 +90,7 @@ pipeline {
                 sshagent(['do-ssh-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
+                    cd /root/deploy
                     docker-compose down
                     docker-compose up -d
                     EOF
@@ -40,16 +99,16 @@ pipeline {
             }
         }
 
-        stage('Verify Application') {
+        stage('Verify Deployment') {
             parallel {
-                stage('Verify on AWS') {
+                stage('Verify AWS Deployment') {
                     steps {
                         sh '''
                         curl -s -o /dev/null -w "%{http_code}" http://$AWS_SERVER_IP:5000
                         '''
                     }
                 }
-                stage('Verify on DigitalOcean') {
+                stage('Verify DigitalOcean Deployment') {
                     steps {
                         sh '''
                         curl -s -o /dev/null -w "%{http_code}" http://$DO_SERVER_IP:5000
