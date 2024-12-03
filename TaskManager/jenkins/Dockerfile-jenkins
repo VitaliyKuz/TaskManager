@@ -1,0 +1,15 @@
+FROM jenkins/jenkins:lts
+
+USER root
+
+# Оновлюємо пакети та встановлюємо необхідні утиліти
+RUN apt-get update && apt-get install -y wget unzip
+
+# Завантажуємо та встановлюємо Terraform останньої версії
+RUN wget https://releases.hashicorp.com/terraform/1.10.0/terraform_1.10.0_linux_amd64.zip && \
+    unzip terraform_1.10.0_linux_amd64.zip && \
+    mv terraform /usr/local/bin/ && \
+    terraform version
+
+# Повертаємося до користувача Jenkins
+USER jenkins

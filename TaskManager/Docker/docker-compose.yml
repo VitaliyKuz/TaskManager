@@ -1,0 +1,71 @@
+version: "3.9"
+
+services:
+  flask_app:
+    build:
+      context: ../app
+      dockerfile: Dockerfile-flask
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    restart: always
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    restart: always
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  cloudwatch-exporter:
+    image: prom/cloudwatch-exporter
+    ports:
+      - "9106:9106"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./cloudwatch-config.yml:/config.yml
+    command:
+      - --config.file=/config.yml
+
+  digitalocean-exporter:
+    build:
+      context: ./digitalocean
+      dockerfile: Dockerfile-digitalocean
+    ports:
+      - "8000:8000"
+    environment:
+      - DO_API_TOKEN=${DO_API_TOKEN}
+
+volumes:
+  db_data:
+  grafana_data:
