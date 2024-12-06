@@ -54,8 +54,6 @@ services:
       - grafana_data:/var/lib/grafana
       - ./Docker/grafana-provisioning:/etc/grafana/provisioning
 
-
-
   cloudwatch-exporter:
     image: prom/cloudwatch-exporter
     ports:
