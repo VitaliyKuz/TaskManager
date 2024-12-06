@@ -1,6 +1,7 @@
 from flask import Flask, Response
 import requests
 import os
+import time
 
 app = Flask(__name__)
 
@@ -9,21 +10,23 @@ DIGITALOCEAN_API_TOKEN = os.getenv("DO_API_TOKEN")
 
 def fetch_droplet_metrics():
     headers = {"Authorization": f"Bearer {DIGITALOCEAN_API_TOKEN}"}
+    start_time = time.time()
     response = requests.get("https://api.digitalocean.com/v2/droplets", headers=headers)
+    api_response_time = time.time() - start_time
+
+    metrics = [f'digitalocean_api_response_time_seconds {api_response_time}']
+
     if response.status_code != 200:
-        return f"# ERROR: Unable to fetch droplets: {response.text}"
+        metrics.append(f'# ERROR: Unable to fetch droplets: {response.text}')
+        return "\n".join(metrics)
 
     droplets = response.json().get("droplets", [])
-
-    metrics = []
     for droplet in droplets:
         droplet_id = droplet["id"]
         name = droplet["name"]
         region = droplet["region"]["slug"]
-
         metrics.append(f'digitalocean_droplet_info{{id="{droplet_id}",name="{name}",region="{region}"}} 1')
 
-        # Example: Add real API metrics if available
         cpu = droplet.get("cpu", 0)
         memory = droplet.get("memory", 0)
         disk = droplet.get("disk", 0)

@@ -49,8 +49,12 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_PROVISIONING_PATH=/etc/grafana/provisioning1
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./Docker/grafana-provisioning:/etc/grafana/provisioning
+      - ./Docker/grafana-dashboard.json:/etc/grafana/provisioning/dashboards/grafana-dashboard.json
+
 
   cloudwatch-exporter:
     image: prom/cloudwatch-exporter
