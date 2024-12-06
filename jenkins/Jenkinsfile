@@ -12,8 +12,14 @@ pipeline {
     stages {
         stage('Setup Environment') {
             steps {
-                echo "AWS IP: $AWS_SERVER_IP"
-                echo "DO IP: $DO_SERVER_IP"
+                script {
+                    try {
+                        echo "AWS IP: $AWS_SERVER_IP"
+                        echo "DO IP: $DO_SERVER_IP"
+                    } catch (Exception e) {
+                        error "Failed to setup environment: ${e.message}"
+                    }
+                }
             }
         }
 
@@ -89,7 +95,6 @@ EOF
                 }
             }
         }
-
 
         stage('Deploy to AWS') {
             steps {

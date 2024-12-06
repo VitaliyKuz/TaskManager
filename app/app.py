@@ -1,10 +1,12 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.exc import ProgrammingError
+from datetime import datetime
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "your_secret_key")
 
 db_user = os.environ.get('POSTGRES_USER', 'user')
 db_password = os.environ.get('POSTGRES_PASSWORD', 'password')
@@ -27,7 +29,7 @@ class Task(db.Model):
 @app.before_first_request
 def initialize_database():
     try:
-        db.create_all()  
+        db.create_all()
     except ProgrammingError as e:
         print("Error during database initialization:", e)
 
@@ -45,6 +47,12 @@ def create_task():
     description = request.form.get('description')
     priority = request.form.get('priority', 'Medium')
     due_date = request.form.get('due_date')
+
+    try:
+        due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
+    except ValueError:
+        flash("Invalid date format. Please enter a valid date (YYYY-MM-DD).")
+        return redirect(url_for('index'))
 
     new_task = Task(title=title, description=description, priority=priority, due_date=due_date)
     db.session.add(new_task)
