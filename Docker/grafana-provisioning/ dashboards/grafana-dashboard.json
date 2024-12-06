@@ -1,0 +1,114 @@
+{
+    "dashboard": {
+      "id": null,
+      "uid": null,
+      "title": "AWS vs DigitalOcean Comparison",
+      "tags": ["aws", "digitalocean", "comparison"],
+      "timezone": "browser",
+      "schemaVersion": 36,
+      "version": 0,
+      "refresh": "5s",
+      "panels": [
+        {
+          "type": "graph",
+          "title": "CPU Utilization Comparison",
+          "gridPos": {
+            "x": 0,
+            "y": 0,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "digitalocean_droplet_cpu",
+              "legendFormat": "DigitalOcean - {{id}}",
+              "refId": "A"
+            },
+            {
+              "expr": "cloudwatch_metric_name{dimension=\"CPUUtilization\"}",
+              "legendFormat": "AWS - {{id}}",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "type": "graph",
+          "title": "Memory Utilization Comparison",
+          "gridPos": {
+            "x": 0,
+            "y": 8,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "digitalocean_droplet_memory",
+              "legendFormat": "DigitalOcean - {{id}}",
+              "refId": "A"
+            },
+            {
+              "expr": "cloudwatch_metric_name{dimension=\"MemoryUtilization\"}",
+              "legendFormat": "AWS - {{id}}",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "type": "graph",
+          "title": "Network Traffic Comparison",
+          "gridPos": {
+            "x": 0,
+            "y": 16,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "digitalocean_droplet_network_in",
+              "legendFormat": "DigitalOcean - Inbound",
+              "refId": "A"
+            },
+            {
+              "expr": "digitalocean_droplet_network_out",
+              "legendFormat": "DigitalOcean - Outbound",
+              "refId": "B"
+            },
+            {
+              "expr": "cloudwatch_metric_name{dimension=\"NetworkIn\"}",
+              "legendFormat": "AWS - Inbound",
+              "refId": "C"
+            },
+            {
+              "expr": "cloudwatch_metric_name{dimension=\"NetworkOut\"}",
+              "legendFormat": "AWS - Outbound",
+              "refId": "D"
+            }
+          ]
+        },
+        {
+          "type": "graph",
+          "title": "API Response Time",
+          "gridPos": {
+            "x": 0,
+            "y": 24,
+            "w": 12,
+            "h": 8
+          },
+          "targets": [
+            {
+              "expr": "digitalocean_api_response_time_seconds",
+              "legendFormat": "DigitalOcean",
+              "refId": "A"
+            },
+            {
+              "expr": "cloudwatch_api_response_time_seconds",
+              "legendFormat": "AWS",
+              "refId": "B"
+            }
+          ]
+        }
+      ]
+    },
+    "overwrite": true
+  }
+  
