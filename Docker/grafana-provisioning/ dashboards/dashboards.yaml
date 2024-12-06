@@ -1,9 +1,9 @@
 apiVersion: 1
-
 providers:
-  - name: 'AWS vs DigitalOcean Dashboards'
-    orgId: 1
+  - name: 'AWS and DigitalOcean Comparison'
     folder: ''
     type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
     options:
       path: /etc/grafana/provisioning/dashboards

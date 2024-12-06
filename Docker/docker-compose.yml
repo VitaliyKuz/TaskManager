@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   flask_app:
     build:
@@ -53,8 +55,6 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./Docker/grafana-provisioning:/etc/grafana/provisioning
-
-
 
   cloudwatch-exporter:
     image: prom/cloudwatch-exporter
