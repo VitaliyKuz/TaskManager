@@ -71,12 +71,11 @@ EOF
                             scp -r Docker/* app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy
-                            if [ ! -f "docker-compose.yml" ]; then
-                                echo "Error: docker-compose.yml not found!"
+                            if [ ! -f "Docker/prometheus.yml" ]; then
+                                echo "Error: prometheus.yml not found!"
                                 exit 1
                             fi
-                            docker-compose down || true
-                            docker-compose pull
+                            docker-compose down --remove-orphans || true
                             docker-compose up -d
                             exit
 EOF
@@ -95,12 +94,11 @@ EOF
                             scp -r Docker/* app digitalocean jenkins root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy
-                            if [ ! -f "docker-compose.yml" ]; then
-                                echo "Error: docker-compose.yml not found!"
+                            if [ ! -f "Docker/prometheus.yml" ]; then
+                                echo "Error: prometheus.yml not found!"
                                 exit 1
                             fi
-                            docker-compose down || true
-                            docker-compose pull
+                            docker-compose down --remove-orphans || true
                             docker-compose up -d
                             exit
 EOF
