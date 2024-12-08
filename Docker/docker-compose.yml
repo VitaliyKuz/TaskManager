@@ -1,3 +1,5 @@
+
+
 services:
   flask_app:
     build:
@@ -53,20 +55,3 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./Docker/grafana-provisioning:/etc/grafana/provisioning
-
-  
-  cloudwatch-exporter:
-    image: prom/cloudwatch-exporter
-    ports:
-      - "9106:9106"
-    environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    volumes:
-      - ./Docker/cloudwatch-config.yml:/config.yml
-    command:
-      - --config.file=/config.yml
-
-volumes:
-  db_data:
-  grafana_data:
