@@ -4,12 +4,20 @@ FROM python:3.9-slim
 # Set the working directory
 WORKDIR /app
 
-# Copy requirements and install dependencies
-COPY digitalocean/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy requirements.txt and validate the file exists
+COPY digitalocean/requirements.txt /app/
+RUN ls -la /app/requirements.txt \
+    && cat /app/requirements.txt
+
+# Install dependencies and verify Flask installation
+RUN pip install --no-cache-dir -r requirements.txt \
+    && python -m pip show flask
 
 # Copy the application file
-COPY digitalocean/digitalocean_exporter.py .
+COPY digitalocean/digitalocean_exporter.py /app/
+
+# Verify that the application file exists
+RUN ls -la /app/digitalocean_exporter.py
 
 # Expose the port
 EXPOSE 8000
