@@ -32,7 +32,8 @@ pipeline {
                                 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
                                 sudo chmod +x /usr/local/bin/docker-compose
                             fi
-                            mkdir -p ~/deploy
+                            sudo mkdir -p ~/deploy
+                            sudo chown ec2-user:ec2-user ~/deploy
                             exit
 EOF
                             '''
@@ -65,7 +66,7 @@ EOF
                         sshagent(['aws-ssh-key']) {
                             sh '''
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
-                            rm -rf ~/deploy/*
+                            sudo rm -rf ~/deploy/*
                             exit
 EOF
                             scp -r Docker/* app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/

@@ -51,6 +51,7 @@ services:
     image: prom/prometheus
     volumes:
       - ./Docker/prometheus.yml:/etc/prometheus/prometheus.yml
+
     ports:
       - "9090:9090"
     restart: always
