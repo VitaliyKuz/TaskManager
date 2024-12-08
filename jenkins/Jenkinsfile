@@ -14,8 +14,6 @@ pipeline {
             steps {
                 script {
                     echo "Setting up environment variables..."
-                    echo "AWS IP: $AWS_SERVER_IP"
-                    echo "DO IP: $DO_SERVER_IP"
                 }
             }
         }
@@ -38,22 +36,17 @@ pipeline {
         stage('Prepare AWS Server') {
             steps {
                 sshagent(['aws-ssh-key']) {
-                    retry(2) {
-                        timeout(time: 90, unit: 'SECONDS') {
-                            sh '''
-                            ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
-                            sudo pkill -f docker-compose || true
-                            sudo yum install -y docker || true
-                            sudo systemctl start docker
-                            sudo usermod -aG docker ec2-user
-                            sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-                            sudo chmod +x /usr/local/bin/docker-compose
-                            mkdir -p ~/deploy
-                            exit
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
+                    sudo yum install -y docker || true
+                    sudo systemctl enable docker
+                    sudo systemctl start docker
+                    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+                    sudo chmod +x /usr/local/bin/docker-compose
+                    mkdir -p ~/deploy
+                    exit
 EOF
-                            '''
-                        }
-                    }
+                    '''
                 }
             }
         }
@@ -61,20 +54,15 @@ EOF
         stage('Prepare DigitalOcean Server') {
             steps {
                 sshagent(['do-ssh-key']) {
-                    retry(2) {
-                        timeout(time: 90, unit: 'SECONDS') {
-                            sh '''
-                            ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
-                            pkill -f docker-compose || true
-                            apt-get install -y docker.io || true
-                            curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-                            chmod +x /usr/local/bin/docker-compose
-                            mkdir -p /root/deploy
-                            exit
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
+                    curl -fsSL https://get.docker.com -o get-docker.sh
+                    sh get-docker.sh
+                    sudo chmod 666 /var/run/docker.sock
+                    mkdir -p /root/deploy
+                    exit
 EOF
-                            '''
-                        }
-                    }
+                    '''
                 }
             }
         }
@@ -84,22 +72,18 @@ EOF
                 stage('Copy to AWS') {
                     steps {
                         sshagent(['aws-ssh-key']) {
-                            timeout(time: 45, unit: 'SECONDS') {
-                                sh '''
-                                scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env ec2-user@$AWS_SERVER_IP:~/deploy/
-                                '''
-                            }
+                            sh '''
+                            scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env ec2-user@$AWS_SERVER_IP:~/deploy/
+                            '''
                         }
                     }
                 }
                 stage('Copy to DigitalOcean') {
                     steps {
                         sshagent(['do-ssh-key']) {
-                            timeout(time: 45, unit: 'SECONDS') {
-                                sh '''
-                                scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env root@$DO_SERVER_IP:/root/deploy/
-                                '''
-                            }
+                            sh '''
+                            scp -o StrictHostKeyChecking=no -r Docker app digitalocean .env root@$DO_SERVER_IP:/root/deploy/
+                            '''
                         }
                     }
                 }
@@ -109,16 +93,15 @@ EOF
         stage('Deploy to AWS') {
             steps {
                 sshagent(['aws-ssh-key']) {
-                    timeout(time: 90, unit: 'SECONDS') {
-                        sh '''
-                        ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
-                        cd ~/deploy
-                        docker-compose --env-file .env down || true
-                        docker-compose --env-file .env up -d
-                        exit
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
+                    cd ~/deploy
+                    docker-compose --env-file .env down || true
+                    docker-compose --env-file .env up -d
+                    docker ps -a
+                    exit
 EOF
-                        '''
-                    }
+                    '''
                 }
             }
         }
@@ -126,16 +109,15 @@ EOF
         stage('Deploy to DigitalOcean') {
             steps {
                 sshagent(['do-ssh-key']) {
-                    timeout(time: 90, unit: 'SECONDS') {
-                        sh '''
-                        ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
-                        cd /root/deploy
-                        docker-compose --env-file .env down || true
-                        docker-compose --env-file .env up -d
-                        exit
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
+                    cd /root/deploy
+                    docker-compose --env-file .env down || true
+                    docker-compose --env-file .env up -d
+                    docker ps -a
+                    exit
 EOF
-                        '''
-                    }
+                    '''
                 }
             }
         }
@@ -145,22 +127,18 @@ EOF
                 stage('Verify AWS Deployment') {
                     steps {
                         retry(2) {
-                            timeout(time: 20, unit: 'SECONDS') {
-                                sh '''
-                                curl -s -o /dev/null -w "%{http_code}" http://$AWS_SERVER_IP:5000 || exit 1
-                                '''
-                            }
+                            sh '''
+                            curl -s -o /dev/null -w "%{http_code}" http://$AWS_SERVER_IP:5000 || exit 1
+                            '''
                         }
                     }
                 }
                 stage('Verify DigitalOcean Deployment') {
                     steps {
                         retry(2) {
-                            timeout(time: 20, unit: 'SECONDS') {
-                                sh '''
-                                curl -s -o /dev/null -w "%{http_code}" http://$DO_SERVER_IP:5000 || exit 1
-                                '''
-                            }
+                            sh '''
+                            curl -s -o /dev/null -w "%{http_code}" http://$DO_SERVER_IP:5000 || exit 1
+                            '''
                         }
                     }
                 }
