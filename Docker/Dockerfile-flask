@@ -1,13 +1,11 @@
-# Dockerfile-flask
 FROM python:3.10-slim
 
 WORKDIR /app
 
-# Copy requirements file and install dependencies
-COPY app/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+COPY app /app
 
-# Copy application source code
-COPY app .
+RUN pip install -r requirements.txt
+
+EXPOSE 5000
 
 CMD ["python", "app.py"]
