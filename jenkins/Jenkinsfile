@@ -50,6 +50,7 @@ EOF
                                 sudo chmod 666 /var/run/docker.sock
                             fi
                             mkdir -p /root/deploy
+                            chown -R root:root /root/deploy
                             exit
 EOF
                             '''
@@ -72,8 +73,8 @@ EOF
                             scp -r Docker/* app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy
-                            if [ ! -f "Docker/prometheus.yml" ]; then
-                                echo "Error: prometheus.yml not found!"
+                            if [ ! -f "prometheus.yml" ]; then
+                                echo "Error: prometheus.yml not found in ~/deploy!"
                                 exit 1
                             fi
                             docker-compose down --remove-orphans || true
@@ -95,8 +96,8 @@ EOF
                             scp -r Docker/* app digitalocean jenkins root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy
-                            if [ ! -f "Docker/prometheus.yml" ]; then
-                                echo "Error: prometheus.yml not found!"
+                            if [ ! -f "prometheus.yml" ]; then
+                                echo "Error: prometheus.yml not found in /root/deploy!"
                                 exit 1
                             fi
                             docker-compose down --remove-orphans || true
