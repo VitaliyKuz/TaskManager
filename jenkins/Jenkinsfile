@@ -14,7 +14,7 @@ pipeline {
                 script {
                     echo "Cloning repository from $GIT_REPO"
                 }
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], 
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']],
                           userRemoteConfigs: [[url: env.GIT_REPO]]])
             }
         }
@@ -73,8 +73,8 @@ EOF
                             scp -r Docker/* app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy
-                            if [ ! -f "prometheus.yml" ]; then
-                                echo "Error: prometheus.yml not found in ~/deploy!"
+                            if [ ! -f "./Docker/prometheus.yml" ]; then
+                                echo "Error: prometheus.yml not found in ~/deploy/Docker!"
                                 exit 1
                             fi
                             docker-compose down --remove-orphans || true
@@ -96,8 +96,8 @@ EOF
                             scp -r Docker/* app digitalocean jenkins root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy
-                            if [ ! -f "prometheus.yml" ]; then
-                                echo "Error: prometheus.yml not found in /root/deploy!"
+                            if [ ! -f "./Docker/prometheus.yml" ]; then
+                                echo "Error: prometheus.yml not found in /root/deploy/Docker!"
                                 exit 1
                             fi
                             docker-compose down --remove-orphans || true
