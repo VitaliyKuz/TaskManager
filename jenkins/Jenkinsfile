@@ -5,9 +5,20 @@ pipeline {
         AWS_SERVER_IP = credentials('aws-server-ip')
         DO_SERVER_IP = credentials('do-server-ip')
         DO_API_TOKEN = credentials('do-credentials-id')
+        GIT_REPO = 'https://github.com/VitaliyKuz/TaskManager.git'
     }
 
     stages {
+        stage('Clone Repository') {
+            steps {
+                script {
+                    echo "Cloning repository from $GIT_REPO"
+                }
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], 
+                          userRemoteConfigs: [[url: env.GIT_REPO]]])
+            }
+        }
+
         stage('Setup Environment') {
             parallel {
                 stage('Prepare AWS Server') {
@@ -53,6 +64,7 @@ EOF
                     steps {
                         sshagent(['aws-ssh-key']) {
                             sh '''
+                            scp -r * ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy
                             docker-compose down
@@ -68,6 +80,7 @@ EOF
                     steps {
                         sshagent(['do-ssh-key']) {
                             sh '''
+                            scp -r * root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy
                             docker-compose down
