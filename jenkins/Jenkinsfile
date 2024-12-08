@@ -55,6 +55,7 @@ EOF
                             sh '''
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy
+                            docker-compose down
                             docker-compose pull
                             docker-compose up -d
                             exit
@@ -69,6 +70,7 @@ EOF
                             sh '''
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy
+                            docker-compose down
                             docker-compose pull
                             docker-compose up -d
                             exit
