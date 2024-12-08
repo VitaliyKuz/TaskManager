@@ -68,7 +68,7 @@ EOF
                             rm -rf ~/deploy/*
                             exit
 EOF
-                            scp -r * ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -r Docker/* app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy
                             if [ ! -f "docker-compose.yml" ]; then
@@ -92,7 +92,7 @@ EOF
                             rm -rf /root/deploy/*
                             exit
 EOF
-                            scp -r * root@$DO_SERVER_IP:/root/deploy/
+                            scp -r Docker/* app digitalocean jenkins root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy
                             if [ ! -f "docker-compose.yml" ]; then
