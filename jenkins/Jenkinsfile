@@ -38,6 +38,7 @@ pipeline {
                 sshagent(['aws-ssh-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no ec2-user@$AWS_SERVER_IP << EOF
+                    sudo yum remove -y containerd
                     sudo yum install -y docker || true
                     sudo systemctl enable docker
                     sudo systemctl start docker
@@ -56,8 +57,11 @@ EOF
                 sshagent(['do-ssh-key']) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no root@$DO_SERVER_IP << EOF
+                    sudo apt-get remove -y containerd
                     curl -fsSL https://get.docker.com -o get-docker.sh
                     sh get-docker.sh
+                    sudo systemctl enable docker
+                    sudo systemctl start docker
                     sudo chmod 666 /var/run/docker.sock
                     mkdir -p /root/deploy
                     exit
