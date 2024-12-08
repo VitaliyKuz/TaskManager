@@ -10,8 +10,8 @@ RUN ls -la /app/requirements.txt \
     && cat /app/requirements.txt
 
 # Install dependencies and verify Flask installation
-RUN pip install --no-cache-dir -r requirements.txt \
-    && python -m pip show flask
+RUN pip install --no-cache-dir -i https://pypi.org/simple -r requirements.txt
+
 
 # Copy the application file
 COPY digitalocean/digitalocean_exporter.py /app/
