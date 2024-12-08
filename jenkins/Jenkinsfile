@@ -71,7 +71,11 @@ EOF
                             scp -r * ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy
-                            docker-compose down
+                            if [ ! -f "docker-compose.yml" ]; then
+                                echo "Error: docker-compose.yml not found!"
+                                exit 1
+                            fi
+                            docker-compose down || true
                             docker-compose pull
                             docker-compose up -d
                             exit
@@ -91,7 +95,11 @@ EOF
                             scp -r * root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy
-                            docker-compose down
+                            if [ ! -f "docker-compose.yml" ]; then
+                                echo "Error: docker-compose.yml not found!"
+                                exit 1
+                            fi
+                            docker-compose down || true
                             docker-compose pull
                             docker-compose up -d
                             exit
