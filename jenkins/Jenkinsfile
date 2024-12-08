@@ -33,7 +33,7 @@ pipeline {
                                 sudo chmod +x /usr/local/bin/docker-compose
                             fi
                             sudo mkdir -p ~/deploy
-                            sudo chown ec2-user:ec2-user ~/deploy
+                            sudo chown -R ec2-user:ec2-user ~/deploy
                             exit
 EOF
                             '''
@@ -50,6 +50,7 @@ EOF
                                 sudo chmod 666 /var/run/docker.sock
                             fi
                             mkdir -p /root/deploy
+                            chown -R root:root /root/deploy
                             exit
 EOF
                             '''
@@ -69,7 +70,7 @@ EOF
                             sudo rm -rf ~/deploy/*
                             exit
 EOF
-                            scp -r Docker/* app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/
+                            scp -r Docker/prometheus.yml Docker/docker-compose.yml app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy
                             if [ ! -f "Docker/prometheus.yml" ]; then
@@ -92,7 +93,7 @@ EOF
                             rm -rf /root/deploy/*
                             exit
 EOF
-                            scp -r Docker/* app digitalocean jenkins root@$DO_SERVER_IP:/root/deploy/
+                            scp -r Docker/prometheus.yml Docker/docker-compose.yml app digitalocean jenkins root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy
                             if [ ! -f "Docker/prometheus.yml" ]; then
