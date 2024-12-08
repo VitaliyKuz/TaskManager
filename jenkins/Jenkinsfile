@@ -46,9 +46,9 @@ pipeline {
         }
 
         stage('Deploy Application') {
-            steps {
-                parallel {
-                    stage('Deploy to AWS') {
+            parallel {
+                stage('Deploy to AWS') {
+                    steps {
                         sshagent(['aws-ssh-key']) {
                             sh '''
                             ssh ec2-user@$AWS_SERVER_IP << EOF
@@ -59,7 +59,9 @@ pipeline {
                             '''
                         }
                     }
-                    stage('Deploy to DigitalOcean') {
+                }
+                stage('Deploy to DigitalOcean') {
+                    steps {
                         sshagent(['do-ssh-key']) {
                             sh '''
                             ssh root@$DO_SERVER_IP << EOF
@@ -75,13 +77,19 @@ pipeline {
         }
 
         stage('Verify Deployment') {
-            steps {
-                parallel {
-                    stage('Verify AWS') {
-                        sh 'curl -s http://$AWS_SERVER_IP:5000'
+            parallel {
+                stage('Verify AWS') {
+                    steps {
+                        sh '''
+                        curl -s http://$AWS_SERVER_IP:5000 || exit 1
+                        '''
                     }
-                    stage('Verify DigitalOcean') {
-                        sh 'curl -s http://$DO_SERVER_IP:5000'
+                }
+                stage('Verify DigitalOcean') {
+                    steps {
+                        sh '''
+                        curl -s http://$DO_SERVER_IP:5000 || exit 1
+                        '''
                     }
                 }
             }
