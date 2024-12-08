@@ -1,26 +1,17 @@
-# Use Python slim image
 FROM python:3.10-slim
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy requirements.txt and validate the file exists
-COPY digitalocean/requirements.txt /app/
-RUN ls -la /app/requirements.txt \
-    && cat /app/requirements.txt
+# Copy requirements and install dependencies
+COPY digitalocean/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies and verify Flask installation
-RUN pip install --no-cache-dir -i https://pypi.org/simple -r requirements.txt
+# Copy application code
+COPY digitalocean/digitalocean_exporter.py .
 
-
-# Copy the application file
-COPY digitalocean/digitalocean_exporter.py /app/
-
-# Verify that the application file exists
-RUN ls -la /app/digitalocean_exporter.py
-
-# Expose the port
+# Expose the application port
 EXPOSE 8000
 
-# Start the application
-CMD ["python3", "digitalocean_exporter.py"]
+# Command to run the application
+CMD ["python", "digitalocean_exporter.py"]
