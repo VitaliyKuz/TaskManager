@@ -32,8 +32,10 @@ pipeline {
                                 sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
                                 sudo chmod +x /usr/local/bin/docker-compose
                             fi
-                            sudo mkdir -p ~/deploy
-                            sudo chown -R ec2-user:ec2-user ~/deploy
+                            if [ ! -d "~/deploy/Docker" ]; then
+                                sudo mkdir -p ~/deploy/Docker
+                                sudo chown -R ec2-user:ec2-user ~/deploy
+                            fi
                             exit
 EOF
                             '''
@@ -49,7 +51,9 @@ EOF
                                 curl -fsSL https://get.docker.com | sh
                                 sudo chmod 666 /var/run/docker.sock
                             fi
-                            mkdir -p /root/deploy
+                            if [ ! -d "/root/deploy/Docker" ]; then
+                                mkdir -p /root/deploy/Docker
+                            fi
                             exit
 EOF
                             '''
@@ -66,16 +70,18 @@ EOF
                         sshagent(['aws-ssh-key']) {
                             sh '''
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
-                            sudo rm -rf ~/deploy/*
+                            if [ ! -d "~/deploy/Docker" ]; then
+                                mkdir -p ~/deploy/Docker
+                            fi
                             exit
 EOF
                             scp -r Docker/* app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
-                            cd ~/deploy
-                            if [ ! -f "./Docker/prometheus.yml" ]; then
+                            if [ ! -f "~/deploy/Docker/prometheus.yml" ]; then
                                 echo "Error: prometheus.yml not found in ~/deploy/Docker!"
                                 exit 1
                             fi
+                            cd ~/deploy
                             docker-compose down --remove-orphans || true
                             docker-compose up -d
                             exit
@@ -89,16 +95,18 @@ EOF
                         sshagent(['do-ssh-key']) {
                             sh '''
                             ssh root@$DO_SERVER_IP << 'EOF'
-                            rm -rf /root/deploy/*
+                            if [ ! -d "/root/deploy/Docker" ]; then
+                                mkdir -p /root/deploy/Docker
+                            fi
                             exit
 EOF
                             scp -r Docker/* app digitalocean jenkins root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
-                            cd /root/deploy
-                            if [ ! -f "./Docker/prometheus.yml" ]; then
+                            if [ ! -f "/root/deploy/Docker/prometheus.yml" ]; then
                                 echo "Error: prometheus.yml not found in /root/deploy/Docker!"
                                 exit 1
                             fi
+                            cd /root/deploy
                             docker-compose down --remove-orphans || true
                             docker-compose up -d
                             exit
