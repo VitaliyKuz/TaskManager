@@ -50,7 +50,6 @@ EOF
                                 sudo chmod 666 /var/run/docker.sock
                             fi
                             mkdir -p /root/deploy
-                            chown -R root:root /root/deploy
                             exit
 EOF
                             '''
