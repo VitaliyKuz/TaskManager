@@ -6,6 +6,7 @@ pipeline {
         DO_SERVER_IP = credentials('do-server-ip')
         DO_API_TOKEN = credentials('do-credentials-id')
         GIT_REPO = 'https://github.com/VitaliyKuz/TaskManager.git'
+        GIT_BRANCH = 'main'
     }
 
     stages {
