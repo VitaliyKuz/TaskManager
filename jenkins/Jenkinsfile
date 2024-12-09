@@ -36,6 +36,14 @@ pipeline {
                                 sudo mkdir -p ~/deploy/Docker
                                 sudo chown -R ec2-user:ec2-user ~/deploy
                             fi
+                            cd ~/deploy
+                            if [ ! -d "TaskManager" ]; then
+                                git clone -b $GIT_BRANCH $GIT_REPO TaskManager
+                            else
+                                cd TaskManager
+                                git reset --hard
+                                git pull origin $GIT_BRANCH
+                            fi
                             exit
 EOF
                             '''
@@ -51,8 +59,13 @@ EOF
                                 curl -fsSL https://get.docker.com | sh
                                 sudo chmod 666 /var/run/docker.sock
                             fi
-                            if [ ! -d "/root/deploy/Docker" ]; then
-                                mkdir -p /root/deploy/Docker
+                            cd /root/deploy
+                            if [ ! -d "TaskManager" ]; then
+                                git clone -b $GIT_BRANCH $GIT_REPO TaskManager
+                            else
+                                cd TaskManager
+                                git reset --hard
+                                git pull origin $GIT_BRANCH
                             fi
                             exit
 EOF
