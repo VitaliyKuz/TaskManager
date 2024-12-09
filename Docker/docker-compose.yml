@@ -54,6 +54,17 @@ services:
       - "9090:9090"
     restart: always
 
+  cloudwatch-exporter:
+    image: quay.io/prometheus/cloudwatch-exporter:latest
+    container_name: cloudwatch-exporter
+    ports:
+      - "9106:9106" 
+    volumes:
+      - ./config.yml:/config/config.yml:ro 
+    command:
+      - "--config.file=/config/config.yml" 
+    restart: always
+
   grafana:
     image: grafana/grafana
     ports:

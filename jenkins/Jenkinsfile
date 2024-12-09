@@ -95,6 +95,7 @@ EOF
                             scp -r Docker/* app digitalocean jenkins ec2-user@$AWS_SERVER_IP:~/deploy/
                             ssh ec2-user@$AWS_SERVER_IP << 'EOF'
                             cd ~/deploy/TaskManager
+                            git pull 
                             docker-compose down --remove-orphans || true
                             docker-compose up -d
                             exit
@@ -116,6 +117,7 @@ EOF
                             scp -r Docker/* app digitalocean jenkins root@$DO_SERVER_IP:/root/deploy/
                             ssh root@$DO_SERVER_IP << 'EOF'
                             cd /root/deploy/TaskManager
+                            git pull
                             docker-compose down --remove-orphans || true
                             docker-compose up -d
                             exit
