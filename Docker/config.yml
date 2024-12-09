@@ -1,9 +1,22 @@
-region: us-west-2 # Your AWS region
+region: us-west-2
 metrics:
   - aws_namespace: AWS/EC2
     aws_metric_name: CPUUtilization
     aws_dimensions: [InstanceId]
     aws_statistics: [Average]
-    range_seconds: 600
-    period_seconds: 60
-    delay_seconds: 60
+  - aws_namespace: AWS/EC2
+    aws_metric_name: NetworkIn
+    aws_dimensions: [InstanceId]
+    aws_statistics: [Sum]
+  - aws_namespace: AWS/EC2
+    aws_metric_name: NetworkOut
+    aws_dimensions: [InstanceId]
+    aws_statistics: [Sum]
+  - aws_namespace: AWS/EC2
+    aws_metric_name: DiskReadBytes
+    aws_dimensions: [InstanceId]
+    aws_statistics: [Sum]
+  - aws_namespace: AWS/EC2
+    aws_metric_name: DiskWriteBytes
+    aws_dimensions: [InstanceId]
+    aws_statistics: [Sum]
