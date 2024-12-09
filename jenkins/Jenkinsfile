@@ -39,7 +39,7 @@ pipeline {
                             fi
                             cd ~/deploy
                             if [ ! -d "TaskManager" ]; then
-                                git clone -b $GIT_BRANCH $GIT_REPO TaskManager
+                                git clone $GIT_REPO 
                             else
                                 cd TaskManager
                                 git reset --hard
@@ -62,7 +62,7 @@ EOF
                             fi
                             cd /root/deploy
                             if [ ! -d "TaskManager" ]; then
-                                git clone -b $GIT_BRANCH $GIT_REPO TaskManager
+                                git clone $GIT_REPO 
                             else
                                 cd TaskManager
                                 git reset --hard
