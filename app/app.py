@@ -1,9 +1,9 @@
-import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy.exc import ProgrammingError
-from datetime import datetime
+from datetime import datetime, date
+import os
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "your_secret_key")
@@ -50,6 +50,10 @@ def create_task():
 
     try:
         due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
+        min_date = date(1999, 1, 1)
+        if due_date < min_date:
+            flash(f"Due date cannot be earlier than {min_date.strftime('%Y-%m-%d')}.")
+            return redirect(url_for('index'))
     except ValueError:
         flash("Invalid date format. Please enter a valid date (YYYY-MM-DD).")
         return redirect(url_for('index'))
