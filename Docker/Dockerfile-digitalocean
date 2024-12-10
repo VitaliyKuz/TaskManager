@@ -1,18 +1,23 @@
+# Use the Python 3.10 slim base image
 FROM python:3.10-slim
 
+# Set the working directory
 WORKDIR /app
 
-# Copy the digitalocean_exporter.py from its directory
+# Install system dependencies required for Python and pip
+RUN apt-get update && apt-get install -y python3 python3-pip && rm -rf /var/lib/apt/lists/*
+
+# Copy the digitalocean_exporter.py script
 COPY digitalocean/digitalocean_exporter.py /app/
 
-# Copy the requirements.txt from the app directory
+# Copy the requirements.txt file
 COPY app/requirements.txt /app/requirements.txt
 
-# Install dependencies
-RUN pip install --no-cache-dir -r /app/requirements.txt
+# Install Python dependencies
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
-# Expose the port for the Flask app
+# Expose the Flask app's port
 EXPOSE 8000
 
-# Run the Flask app
-CMD ["python", "digitalocean_exporter.py"]
+# Command to run the Flask app
+CMD ["python3", "digitalocean_exporter.py"]
