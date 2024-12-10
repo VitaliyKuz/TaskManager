@@ -51,8 +51,8 @@ def create_task():
     try:
         due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
         min_date = date(1999, 1, 1)
-        if due_date < min_date:
-            flash(f"Due date cannot be earlier than {min_date.strftime('%Y-%m-%d')}.")
+        if due_date > min_date:
+            flash(f"Due date cannot be later than {min_date.strftime('%Y-%m-%d')}.")
             return redirect(url_for('index'))
     except ValueError:
         flash("Invalid date format. Please enter a valid date (YYYY-MM-DD).")
