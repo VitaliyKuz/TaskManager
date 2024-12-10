@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   flask_app:
     build:
@@ -26,6 +28,7 @@ services:
     volumes:
       - ./digitalocean:/app
       - ./app/requirements.txt:/app/requirements.txt
+    restart: always
 
   db:
     image: postgres:14
