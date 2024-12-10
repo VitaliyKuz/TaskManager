@@ -2,15 +2,17 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-# Copy the application and required files to the correct paths
-COPY digitalocean/digitalocean_exporter.py /app/digitalocean_exporter.py
+# Copy the digitalocean_exporter.py from its directory
+COPY digitalocean/digitalocean_exporter.py /app/
+
+# Copy the requirements.txt from the app directory
 COPY app/requirements.txt /app/requirements.txt
 
-# Install dependencies from the correct requirements file
+# Install dependencies
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
-# Expose the application port
+# Expose the port for the Flask app
 EXPOSE 8000
 
-# Start the Flask application
-CMD ["python", "/app/digitalocean_exporter.py"]
+# Run the Flask app
+CMD ["python", "digitalocean_exporter.py"]

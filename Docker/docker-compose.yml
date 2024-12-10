@@ -18,18 +18,14 @@ services:
     build:
       context: .
       dockerfile: Docker/Dockerfile-digitalocean
-    ports:
-      - "8000:8000"
     environment:
       - DO_API_TOKEN=${DO_API_TOKEN}
-    depends_on:
-      - db
-    restart: always
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/metrics"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+    ports:
+      - "8000:8000"
+    working_dir: /app
+    volumes:
+      - ./digitalocean:/app
+      - ./app/requirements.txt:/app/requirements.txt
 
   db:
     image: postgres:14
